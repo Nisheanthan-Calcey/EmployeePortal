@@ -1,0 +1,43 @@
+<ion-header>
+    <ion-toolbar>
+      <ion-title>
+        Designation 
+      </ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
+  
+  <div class='desContainar'>
+    <table>
+      <thead>
+        <tr>
+            <th>
+              <ion-item>
+                <ion-label>Designation</ion-label>
+              </ion-item>
+            </th>
+            <th>
+              <ion-item>
+                <ion-label>Department</ion-label>
+              </ion-item>
+            </th> 
+        </tr>
+      </thead>
+  
+      <tbody>
+        <tr *ngFor='let designation of designations'>
+          <td>
+            <ion-item>
+              <ion-label>{{designation.name}}</ion-label>
+            </ion-item>
+          </td>
+          <td>
+            <ion-item>
+              <ion-label>{{designation.department.displayName}}</ion-label>
+            </ion-item>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>

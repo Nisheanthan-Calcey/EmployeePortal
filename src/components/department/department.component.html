@@ -1,0 +1,33 @@
+<ion-header>
+    <ion-toolbar>
+      <ion-title>
+        Department 
+      </ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
+  
+  <div class='desContainar'>
+    <table>
+      <thead>
+        <tr>
+            <th>
+              <ion-item>
+                <ion-label>Department</ion-label>
+              </ion-item>
+            </th> 
+        </tr>
+      </thead>
+  
+      <tbody>
+        <tr *ngFor='let department of departments'>
+          <td>
+            <ion-item>
+              <ion-label>{{department.name}}</ion-label>
+            </ion-item>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>

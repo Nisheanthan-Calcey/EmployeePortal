@@ -1,1 +1,13 @@
+.left-bar{
+    float: left;
+    width:15%;
+}
 
+.content{
+    float:right;
+    width:85%;
+}
+
+ion-item{
+    cursor: pointer;
+}

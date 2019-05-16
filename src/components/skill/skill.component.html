@@ -1,0 +1,43 @@
+<ion-header>
+    <ion-toolbar>
+      <ion-title>
+        Skills 
+      </ion-title>
+    </ion-toolbar>
+  </ion-header>
+  
+  <ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
+
+  <div class='skillContainar'>
+    <table>
+      <thead>
+        <tr>
+            <th>
+              <ion-item>
+                <ion-label>Skill</ion-label>
+              </ion-item>
+            </th>
+            <th>
+              <ion-item>
+                <ion-label>Department</ion-label>
+              </ion-item>
+            </th> 
+        </tr>
+      </thead>
+  
+      <tbody>
+        <tr *ngFor='let skill of skills'>
+          <td>
+            <ion-item>
+              <ion-label>{{skill.name}}</ion-label>
+            </ion-item>
+          </td>
+          <td>
+            <ion-item>
+              <ion-label>{{skill.department.displayName}}</ion-label>
+            </ion-item>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
