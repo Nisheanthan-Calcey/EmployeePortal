@@ -1,23 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+
 import { DepartmentService } from 'src/services/department.service';
+
+import { IDepartment } from './department.interface';
 
 @Component({
   selector: 'app-department',
   templateUrl: './department.component.html',
   styleUrls: ['./department.component.scss'],
 })
-export class DepartmentComponent implements OnInit {
+export class DepartmentComponent {
+  private departments: IDepartment[];
 
-  public departments = [];
-  errorMsg: any;
-
-  constructor( private departmentService: DepartmentService) { }
-
-  ngOnInit() {
-    this.departmentService.getDepartments()
-    .subscribe(data => (Object.values(data)
-                          .map(list => this.departments = list),
-                          console.log('List of Departments', this.departments)),
-              error => (this.errorMsg = error, console.log(error)));
+  constructor( private departmentService: DepartmentService) {
+    this.departments = this.departmentService.getDepartments();
+    this.departmentService.updateServer();
   }
 }

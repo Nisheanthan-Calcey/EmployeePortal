@@ -1,0 +1,26 @@
+<ion-header>
+    <ion-toolbar>
+        <ion-title>
+            Edit Designation 
+        </ion-title>
+        <ion-buttons slot="start">
+            <ion-back-button defaultHref="home/designation"></ion-back-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+
+<div>
+    <form (ngSubmit)="updateDesignation()" [formGroup]='editDesignation'>
+        <ion-item>
+            <ion-select placeholder="{{department}}" formControlName='departmentId' interface='popover' disabled = true>
+                <ion-select-option ></ion-select-option>
+            </ion-select>
+        </ion-item>
+        <ion-item>
+            <ion-input type="text" placeholder = 'Designation Name*' formControlName='name'></ion-input>
+        </ion-item>
+
+        <ion-button type="submit">Edit</ion-button>
+        <ion-button type="reset" fill="outline">CLEAR</ion-button>
+    </form>
+</div>

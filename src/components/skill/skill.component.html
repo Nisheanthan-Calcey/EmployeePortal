@@ -1,43 +1,55 @@
 <ion-header>
-    <ion-toolbar>
-      <ion-title>
-        Skills 
-      </ion-title>
-    </ion-toolbar>
-  </ion-header>
-  
-  <ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
+  <ion-toolbar>
+    <ion-title>
+      Skills 
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
 
-  <div class='skillContainar'>
-    <table>
-      <thead>
-        <tr>
-            <th>
-              <ion-item>
-                <ion-label>Skill</ion-label>
-              </ion-item>
-            </th>
-            <th>
-              <ion-item>
-                <ion-label>Department</ion-label>
-              </ion-item>
-            </th> 
-        </tr>
-      </thead>
+<div class='skillAdd'>
+  <ion-fab horizontal="end" slot="fixed" [routerLink] = "['/home/addSkill']">
+    <ion-fab-button>
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</div>
   
-      <tbody>
-        <tr *ngFor='let skill of skills'>
-          <td>
+<ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
+
+<div class='skillContainar'>
+  <table>
+    <thead>
+      <tr>
+          <th>
             <ion-item>
-              <ion-label>{{skill.name}}</ion-label>
+              <ion-label>Skill</ion-label>
             </ion-item>
-          </td>
-          <td>
+          </th>
+          <th>
             <ion-item>
-              <ion-label>{{skill.department.displayName}}</ion-label>
+              <ion-label>Department</ion-label>
             </ion-item>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          </th> 
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor='let skill of skills'>
+        <td>
+          <ion-item>
+            <ion-label>{{skill.name}}</ion-label>
+          </ion-item>
+        </td>
+        <td>
+          <ion-item *ngIf = 'skill.department'>
+            <ion-label>{{skill.department.name}}</ion-label>
+          </ion-item>
+        </td>
+        <td>
+          <ion-button color="warning" [routerLink] = "['/home/editSkill',skill.id]">Edit</ion-button>
+          <ion-button color="danger" (click)="deleteSkill(skill.id)">Delete</ion-button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

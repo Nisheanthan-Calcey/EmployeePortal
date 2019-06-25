@@ -1,28 +1,36 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+
+import { AlertService } from 'src/services/shared/alert.service';
 import { EmployeeService } from 'src/services/employee.service';
-import { NetConnectionService } from 'src/services/shared/connection.service';
+
+import { IEmployee } from './employee.interface';
 
 @Component({
   selector: 'app-employee',
   templateUrl: './employee.component.html',
   styleUrls: ['./employee.component.scss'],
 })
-export class EmployeeComponent implements OnInit {
+export class EmployeeComponent {
+  public employees: IEmployee[];
 
-  public employees = [];
-  errorMsg: any;
+  constructor(private employeeService: EmployeeService,
+              private router: Router,
+              private alertService: AlertService) {
+                this.employees = this.employeeService.getEmployees();
+              }
 
-  constructor(private employeeService: EmployeeService) { }
-
-  ngOnInit() {
-    this.employeeService.getEmployees()
-    .subscribe( data => (Object.values(data)
-                          .map(list => this.employees = list),
-                          console.log( 'List of Employees' , this.employees)),
-                error => (this.errorMsg = error, console.log(error)));
+  selectEmployee(id: string) {
+    this.router.navigate(['home/employee', id]);
   }
 
-  routeAddEmp() {
-    console.log('directing..');
+  deleteEmployee(id: string) {
+    const confirm = this.alertService.confirmDelete();
+    if (confirm) {
+      this.employeeService.delEmployee(id).subscribe(
+        () => console.log('Successfully deleted'),
+        (err) => console.log('error: ', err)
+      );
+    }
   }
 }

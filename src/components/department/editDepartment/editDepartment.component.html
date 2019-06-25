@@ -1,0 +1,22 @@
+<ion-header>
+    <ion-toolbar>
+        <ion-title>
+            Edit Department 
+        </ion-title>
+        <ion-buttons slot="start">
+            <ion-back-button defaultHref="home/department"></ion-back-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+    
+<div>
+    <form (ngSubmit)="updateDepartment()" [formGroup]='editDepartment'>
+        <ion-item>
+            <ion-input type="text" placeholder = 'Department Name*' formControlName='name'></ion-input>
+        </ion-item>
+
+        <ion-button type="submit">SUBMIT</ion-button>
+        <ion-button type="reset" fill="outline">CLEAR</ion-button>
+    </form>
+</div>
+        

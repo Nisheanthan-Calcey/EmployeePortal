@@ -1,0 +1,27 @@
+<ion-header>
+    <ion-toolbar>
+        <ion-title>
+            Add Skill
+        </ion-title>
+        <ion-buttons slot="start">
+            <ion-back-button defaultHref="home/skill"></ion-back-button>
+        </ion-buttons>
+    </ion-toolbar>
+</ion-header>
+
+<div>
+    <form (ngSubmit)="addSkill()" [formGroup]='newSkill'>
+        <ion-item>
+            <ion-select placeholder="Department Name*" formControlName='departmentId' interface="popover">
+                <ion-select-option *ngFor='let department of departments' value={{department.id}}>{{department.displayName}}</ion-select-option>
+            </ion-select>
+        </ion-item>
+        <ion-item>
+            <ion-input type="text" placeholder = 'Skill Name*' formControlName='name'></ion-input>
+        </ion-item>
+
+        <ion-button type="submit">SUBMIT</ion-button>
+        <ion-button type="reset" fill="outline">CLEAR</ion-button>
+    </form>
+</div>
+    

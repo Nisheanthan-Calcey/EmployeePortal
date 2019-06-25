@@ -1,3 +1,15 @@
-<p>
-  employee-detail works!
-</p>
+<ion-card>
+    <ion-item>
+      <ion-icon name="pin" slot="start"></ion-icon>
+      <ion-label>employee - {{empId}} is selected</ion-label>
+      <ion-button fill="outline" slot="end">View</ion-button>
+    </ion-item>
+  
+    <ion-card-content>
+      This is content, without any paragraph or header tags,
+      within an ion-card-content element.
+    </ion-card-content>
+  </ion-card>
+
+  <ion-button color="warning" [routerLink] = "['/home/editEmployee',empId]" >Edit</ion-button>
+  <ion-button color="danger" (click)="deleteEmployee(empId)">Delete</ion-button>

@@ -1,23 +1,32 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
+
+import { AlertService } from 'src/services/shared/alert.service';
 import { DesignationService } from 'src/services/designation.service';
+
+import { IDesignation } from './designation.interface';
 
 @Component({
   selector: 'app-designation',
   templateUrl: './designation.component.html',
   styleUrls: ['./designation.component.scss'],
 })
-export class DesignationComponent implements OnInit {
+export class DesignationComponent {
+  public designations: IDesignation[];
 
-  public designations = [];
-  errorMsg: any;
+  constructor(private designationService: DesignationService,
+              private alertService: AlertService) {
+    this.designations = this.designationService.getDesignations();
+  }
 
-  constructor( private designationService: DesignationService) { }
-
-  ngOnInit() {
-    this.designationService.getDesignations()
-    .subscribe(data => (Object.values(data)
-                          .map(list => this.designations = list),
-                          console.log('List of Designations', this.designations)),
-              error => (this.errorMsg = error, console.log(error)));
+  deleteDesignation(id: string) {
+    const confirm = this.alertService.confirmDelete();
+    if (confirm) {
+      this.designationService.delDesignation(id).subscribe(
+        () => {
+          console.log('Successfully deleted');
+        },
+        (err) => console.log('error: ', err)
+      );
+    }
   }
 }

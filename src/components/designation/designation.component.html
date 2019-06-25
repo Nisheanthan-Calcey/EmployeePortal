@@ -6,6 +6,14 @@
     </ion-toolbar>
   </ion-header>
 
+  <div class='desAdd'>
+    <ion-fab horizontal="end" slot="fixed" [routerLink] = "['/home/addDesignation']"  routerLinkActive="active">
+      <ion-fab-button>
+        <ion-icon name="add"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+  </div>
+
   <ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
   
   <div class='desContainar'>
@@ -17,11 +25,11 @@
                 <ion-label>Designation</ion-label>
               </ion-item>
             </th>
-            <th>
+            <!-- <th>
               <ion-item>
                 <ion-label>Department</ion-label>
               </ion-item>
-            </th> 
+            </th>  -->
         </tr>
       </thead>
   
@@ -32,10 +40,14 @@
               <ion-label>{{designation.name}}</ion-label>
             </ion-item>
           </td>
-          <td>
-            <ion-item>
-              <ion-label>{{designation.department.displayName}}</ion-label>
+          <!-- <td>
+            <ion-item *ngIf='designation.department'>
+              <ion-label>{{designation.department.name}}</ion-label>
             </ion-item>
+          </td> -->
+          <td>
+            <ion-button color="warning" [routerLink] = "['/home/editDesignation',designation.id]"  routerLinkActive="active">Edit</ion-button>
+            <ion-button color="danger" (click)="deleteDesignation(designation.id)">Delete</ion-button>
           </td>
         </tr>
       </tbody>

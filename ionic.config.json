@@ -1,5 +1,7 @@
 {
   "name": "MyEmployeePortal",
-  "integrations": {},
+  "integrations": {
+    "cordova": {}
+  },
   "type": "angular"
 }

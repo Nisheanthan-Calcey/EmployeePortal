@@ -7,8 +7,8 @@
 </ion-header>
 
 <div class='empAdd'>
-  <ion-fab horizontal="end" slot="fixed" [routerLink] = "['./addEmployee']"  routerLinkActive="active">
-    <ion-fab-button (click)="routeAddEmp()">
+  <ion-fab horizontal="end" slot="fixed" [routerLink] = "['/home/addEmployee']">
+    <ion-fab-button>
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
@@ -20,43 +20,48 @@
   <table>
     <thead>
       <tr>
-          <th>
-            <ion-item>
-              <ion-label>Name</ion-label>
-            </ion-item>
-          </th>
-          <th>
-            <ion-item>
-              <ion-label>Department</ion-label>
-            </ion-item>
-          </th> 
-          <th>
-            <ion-item>
-              <ion-label>Designation</ion-label>
-            </ion-item>
-          </th> 
-          <th>
-            <ion-item>
-              <ion-label>Project</ion-label>
-            </ion-item>
-          </th> 
+        <th>
+          <ion-item>
+            <ion-label>Name</ion-label>
+          </ion-item>
+        </th>
+        <th>
+          <ion-item>
+            <ion-label>Department</ion-label>
+          </ion-item>
+        </th> 
+        <th>
+          <ion-item>
+            <ion-label>Designation</ion-label>
+          </ion-item>
+        </th> 
+        <th>
+          <ion-item>
+            <ion-label>Project</ion-label>
+          </ion-item>
+        </th> 
+        <th>
+          <ion-item>
+            <ion-label>Action</ion-label>
+          </ion-item>
+        </th>
       </tr>
     </thead>
 
     <tbody>
       <tr *ngFor='let employee of employees'>
         <td>
-          <ion-item>
-            <ion-label>{{employee.displayName}}</ion-label>
+          <ion-item button (click)='selectEmployee(employee.id)' >
+            <ion-label>{{employee.fullName}}</ion-label>
           </ion-item>
         </td>
         <td>
-          <ion-item>
-            <ion-label>{{employee.department.displayName}}</ion-label>
+          <ion-item *ngIf='employee.department != null'>
+            <ion-label>{{employee.department.name}}</ion-label>
           </ion-item>
         </td>
         <td>
-          <ion-item>
+          <ion-item *ngIf='employee.designation != null'>
             <ion-label>{{employee.designation.name}}</ion-label>
           </ion-item>
         </td>
@@ -65,10 +70,12 @@
             <ion-label>{{project.name}}</ion-label>
           </ion-item>
         </td>
+        <td>
+          <ion-button color="warning" [routerLink] = "['/home/editEmployee',employee.id]" >Edit</ion-button>
+          <ion-button color="danger" (click)="deleteEmployee(employee.id)">Delete</ion-button>
+        </td>
       </tr>
     </tbody>
   </table>
 </div>
 
-<div>{{errorMsg}}</div>
-<router-outlet></router-outlet>

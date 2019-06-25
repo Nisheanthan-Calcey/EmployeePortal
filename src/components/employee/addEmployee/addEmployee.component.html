@@ -3,7 +3,69 @@
         <ion-title>
             Add Employee 
         </ion-title>
+        <ion-buttons slot="start">
+            <ion-back-button defaultHref="home/employee"></ion-back-button>
+        </ion-buttons>
     </ion-toolbar>
 </ion-header>
 
-<h1> Hi </h1>
+<div>
+  <form (ngSubmit)="addEmployee()" [formGroup]='newEmployee'>
+    <ion-item lines="none">
+      Basic Detail
+    </ion-item>
+      <ion-item *ngFor='let details of basicDetails'>
+        <ion-input type="text" placeholder = '{{details.placeholder}}' formControlName='{{details.name}}'></ion-input>
+      </ion-item>
+      <ion-item >
+        <ion-label position="stacked">Join Date*</ion-label>
+        <ion-datetime display-format="DD/MMM/YYYY" picker-format="DD/MMM/YYYY" formControlName='startDate'  ></ion-datetime>
+      </ion-item>
+
+
+    <ion-item lines="none" >
+      Contact Info
+    </ion-item>
+      <div formGroupName='employeeContactInfo'>
+        <ion-item *ngFor='let details of contactDetails'>
+          <ion-input type="text" placeholder = '{{details.placeholder}}'  formControlName='{{details.name}}'></ion-input>
+        </ion-item>
+      
+        <div formGroupName='address'>
+          <ion-item *ngFor='let field of address'>
+            <ion-input type="text" placeholder = '{{field.placeholder}}'  formControlName='{{field.name}}'></ion-input>
+          </ion-item>
+        </div>
+      </div>
+
+    <ion-item lines="none">
+      Employement Details
+    </ion-item>
+      <ion-item>
+        <ion-select placeholder="Department Name*" formControlName='department' interface="popover">
+            <ion-select-option *ngFor='let department of departments' value="{{department.id}}">{{department.name}}</ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-select placeholder="Designation Name*" formControlName='designation' interface="popover">
+            <ion-select-option *ngFor='let designation of designations' value="{{designation.id}}" >{{designation.name}}</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item lines="none">
+        Skills
+      </ion-item>
+      <div formArrayName="skills">
+        <div *ngFor="let skillControl of newEmployee.controls.skills.controls; let i=index" [formGroupName]='i'>
+          <ion-item>
+            <ion-select placeholder="Skills" formControlName='id' interface="popover">
+              <ion-select-option *ngFor='let skill of skillsList' value="{{skill.skillId}}">{{skill.name}}</ion-select-option>
+            </ion-select>
+          </ion-item>
+        </div>
+      </div>
+
+    <ion-button type="submit">SUBMIT</ion-button>
+    <ion-button type="reset" fill="outline">CLEAR</ion-button>
+  </form>
+</div>
