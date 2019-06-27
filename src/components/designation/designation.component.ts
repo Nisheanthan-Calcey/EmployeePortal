@@ -16,6 +16,7 @@ export class DesignationComponent {
   constructor(private designationService: DesignationService,
               private alertService: AlertService) {
     this.designations = this.designationService.getDesignations();
+    this.designationService.updateServer();
   }
 
   deleteDesignation(id: string) {

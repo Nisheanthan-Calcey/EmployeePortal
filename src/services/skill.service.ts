@@ -16,33 +16,41 @@ export class SkillService {
     readonly ROOT_URL = 'http://animus.api.daily2/api/v1/Skills';
     private headers = this.headerService.header;
     private skillList: ISkills[];
+    private online: boolean;
 
     constructor(private http: HttpClient,
                 private headerService: ApiHeaderService,
                 private connectionService: NetConnectionService,
                 private databaseService: DatabaseService,
                 private departmentService: DepartmentService,
-                private sqlitePorter: SQLitePorter) {}
+                private sqlitePorter: SQLitePorter) {
+                    this.connectionService.getConnectionState().subscribe(online => {
+                        if (online) {
+                            this.online = true;
+                        } else {
+                            this.online = false;
+                        }
+                    });
+
+                    }
 
     getSkills(): ISkills[] {
-        this.connectionService.getConnectionState().subscribe(online => {
-            if (online) {
-                console.log('ONLINE');
-                const skillsFromAPI = this.http.get<any[]>(`${this.ROOT_URL}?query=%7B%7D` , { headers: this.headers });
-                skillsFromAPI.subscribe(data => (Object.values(data)
-                                            .map(list => this.skillList = list),
-                                            console.log('Skills from API: ', this.skillList),
-                                            this.updateToLocalDB(this.skillList)),
-                                        error => {
-                                                console.log(error);
-                                                alert('Error on API, Trying to fetch Skills from Database');
-                                                this.skillList = this.skillsFromDB();
-                                        });
-            } else {
-                console.log('OFFLINE');
-                this.skillList = this.skillsFromDB();
-            }
-        });
+        if (this.online) {
+            console.log('ONLINE');
+            const skillsFromAPI = this.http.get<any[]>(`${this.ROOT_URL}?query=%7B%7D` , { headers: this.headers });
+            skillsFromAPI.subscribe(data => (Object.values(data)
+                                        .map(list => this.skillList = list),
+                                        console.log('Skills from API: ', this.skillList),
+                                        this.updateToLocalDB(this.skillList)),
+                                    error => {
+                                            console.log(error);
+                                            alert('Error on API, Trying to fetch Skills from Database');
+                                            this.skillList = this.skillsFromDB();
+                                    });
+        } else {
+            console.log('OFFLINE');
+            this.skillList = this.skillsFromDB();
+        }
         return this.skillList;
     }
 
@@ -85,91 +93,83 @@ export class SkillService {
 
     addNewSkill(skill: any): Observable<ISkills[]> {
         let addSkill: Observable<ISkills[]>;
-        this.connectionService.getConnectionState().subscribe(online => {
-            const sId = require('uuid/v4');
-            const query = 'INSERT INTO skill (id,name,department) VALUES (?,?,?)';
-            const newSkill = [sId, skill.name, skill.departmentId];
-            addSkill = from(this.databaseService.database.executeSql(query, newSkill).then(data => {
-                            this.skillList = this.skillsFromDB();
-                            if (online) {
-                                this.http.post<ISkills[]>(`${this.ROOT_URL}` , skill, { headers: this.headers}).
-                                    subscribe(api => console.log('New Skill added to server'),
-                                                error => console.log('Error on adding skill to server'));
-                            }
-                            return this.skillList;
-            }));
-        });
+        const sId = require('uuid/v4');
+        const query = 'INSERT INTO skill (id,name,department) VALUES (?,?,?)';
+        const newSkill = [sId, skill.name, skill.departmentId];
+        addSkill = from(this.databaseService.database.executeSql(query, newSkill).then(data => {
+                        this.skillList = this.skillsFromDB();
+                        return this.skillList;
+        }));
+        if (this.online) {
+            this.http.post<ISkills[]>(`${this.ROOT_URL}` , skill, { headers: this.headers}).
+                subscribe(api => console.log('New Skill added to server'),
+                            error => console.log('Error on adding skill to server'));
+        }
         return addSkill;
     }
 
     updateSkill(skill: any): Observable<void>  {
         console.log(skill, 'check skill');
         let editSkill: Observable<void>;
-        this.connectionService.getConnectionState().subscribe(online => {
-            const id = JSON.stringify(skill.id);
-            const query = `UPDATE skill SET name = ? WHERE id = ${id}`;
-            const changeSkill = [skill.name];
-            editSkill = from(this.databaseService.database.executeSql(query, changeSkill).then(data => {
-                                if (data.rowsAffected === 1) {
-                                    this.skillList = this.skillsFromDB();
-                                    if (online) {
-                                        this.http.put<void>(`${this.ROOT_URL}/${skill.id}`, skill, {headers: this.headers}).
-                                            subscribe(api => console.log('Editted in server'),
-                                                        error => console.log('Error on editting at server'));
-                                    }
-                                } else {
-                                    console.log('error on adding to DB');
-                                }
-            }));
-        });
+        const id = JSON.stringify(skill.id);
+        const query = `UPDATE skill SET name = ? WHERE id = ${id}`;
+        const changeSkill = [skill.name];
+        editSkill = from(this.databaseService.database.executeSql(query, changeSkill).then(data => {
+                            if (data.rowsAffected === 1) {
+                                this.skillList = this.skillsFromDB();
+                            } else {
+                                console.log('error on adding to DB');
+                            }
+        }));
+        if (this.online) {
+            this.http.put<void>(`${this.ROOT_URL}/${skill.id}`, skill, {headers: this.headers}).
+                subscribe(api => console.log('Editted in server'),
+                            error => console.log('Error on editting at server'));
+        }
         return editSkill;
     }
 
     delSkill(id: ISkills['skillId']): Observable<void> {
         let delSkill: Observable<void>;
-        this.connectionService.getConnectionState().subscribe(online => {
-            delSkill = from(this.databaseService.database.executeSql('DELETE FROM skill WHERE id = ?', [id]).then(_ => {
-                                this.skillList = this.skillsFromDB();
-                                if (online) {
-                                    this.http.delete<void>(`${this.ROOT_URL}/${id}?force=true`, { headers: this.headers}).
-                                        subscribe(api => console.log('Skill Deleted from server'),
-                                                    error => console.log('Error on deleting from server'));
-                                }
-            }));
-        });
+        delSkill = from(this.databaseService.database.executeSql('DELETE FROM skill WHERE id = ?', [id]).then(_ => {
+                            this.skillList = this.skillsFromDB();
+                    }));
+        if (this.online) {
+            this.http.delete<void>(`${this.ROOT_URL}/${id}?force=true`, { headers: this.headers}).
+                subscribe(api => console.log('Skill Deleted from server'),
+                            error => console.log('Error on deleting from server'));
+        }
         return delSkill;
     }
 
     getSkillsByDepartment(id: IDepartment['id']): Observable<any> {
         return new Observable<any>(observer => {
             let skills: ISkills[] = [];
-            this.connectionService.getConnectionState().subscribe(online => {
-                if (online) {
-                    // tslint:disable-next-line:max-line-length
-                    const skill = this.http.get<any[]>(`http://animus.api.daily2/api/v1/Departments/${id}/Skills`, { headers: this.headers });
-                    skill.subscribe(data => {Object.values(data)
-                                            .map(list => skills = list),
-                                             observer.next(skills);
-                                             observer.complete();
-                                        },
-                                error => (console.log(error)));
-                } else {
-                    from(this.databaseService.database.executeSql('SELECT * FROM skill WHERE department = ?', [id]).then(skill => {
-                        if (skill.rows.length > 0) {
-                            for (let s = 0; s < skill.rows.length; s++) {
-                                skills.push({
-                                    skillId: skill.rows.item(s).id,
-                                    name: skill.rows.item(s).name,
-                                    department: skill.rows.item(s).department,
-                                });
-                            }
+            if (this.online) {
+                // tslint:disable-next-line:max-line-length
+                const skill = this.http.get<any[]>(`http://animus.api.daily2/api/v1/Departments/${id}/Skills`, { headers: this.headers });
+                skill.subscribe(data => {Object.values(data)
+                                        .map(list => skills = list),
+                                            observer.next(skills);
+                                         observer.complete();
+                                    },
+                            error => (console.log(error)));
+            } else {
+                from(this.databaseService.database.executeSql('SELECT * FROM skill WHERE department = ?', [id]).then(skill => {
+                    if (skill.rows.length > 0) {
+                        for (let s = 0; s < skill.rows.length; s++) {
+                            skills.push({
+                                skillId: skill.rows.item(s).id,
+                                name: skill.rows.item(s).name,
+                                department: skill.rows.item(s).department,
+                            });
                         }
-                        observer.next(skills);
-                        observer.complete();
-                        })
-                    );
-                }
-            });
+                    }
+                    observer.next(skills);
+                    observer.complete();
+                    })
+                );
+            }
         });
     }
 
