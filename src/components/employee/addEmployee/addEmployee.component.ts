@@ -12,6 +12,7 @@ import { SkillService } from 'src/services/skill.service';
 import { IDepartment } from 'src/components/department/department.interface';
 import { IDesignation } from 'src/components/designation/designation.interface';
 import { ISkills } from 'src/components/skill/skill.interface';
+import { NetConnectionService } from 'src/services/shared/connection.service';
 
 @Component({
     selector: 'add-employee',
@@ -67,16 +68,29 @@ export class AddEmployeeComponent {
     private designations: IDesignation[];
     private skillsList: ISkills[];
 
-    constructor( private employeeService: EmployeeService,
-                 private departmentService: DepartmentService,
-                 private designationService: DesignationService,
-                 private skillService: SkillService,
-                 private employeeForm: FormBuilderService,
-                 private alertService: AlertService,
-                 private location: Location) {
-                    this.departments = this.departmentService.getDepartments();
-                    this.subscribeChanges();
-                 }
+    constructor(
+        private employeeService: EmployeeService,
+        private departmentService: DepartmentService,
+        private designationService: DesignationService,
+        private skillService: SkillService,
+        private employeeForm: FormBuilderService,
+        private alertService: AlertService,
+        private location: Location,
+        private netConnection: NetConnectionService) {
+        this.netConnection.getConnectionState().subscribe(online => {
+            if (online) {
+                this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
+                    this.departments = depFromAPI;
+                });
+                this.departmentService.updateServer();
+            } else {
+                this.departmentService.departmentsFromDB().then(depFromDB => {
+                    this.departments = depFromDB;
+                });
+            }
+        });
+        this.subscribeChanges();
+    }
 
     subscribeChanges() {
         this.newEmployee.controls.department.valueChanges.subscribe(

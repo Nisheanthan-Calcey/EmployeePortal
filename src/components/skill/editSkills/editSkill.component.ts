@@ -25,29 +25,30 @@ export class EditSkillComponent implements OnInit {
     private editSkill: FormGroup;
     private offline: boolean;
 
-    constructor(private skillForm: FormBuilderService,
-                private route: ActivatedRoute,
-                private skillService: SkillService,
-                private netConnection: NetConnectionService,
-                private departmentService: DepartmentService,
-                private alertService: AlertService,
-                private location: Location) {
-                    this.netConnection.getConnectionState().subscribe(online => {
-                        if (online) {
-                            this.offline = false;
-                        } else {
-                            this.offline = true;
-                        }
-                    });
-                }
+    constructor(
+        private skillForm: FormBuilderService,
+        private route: ActivatedRoute,
+        private skillService: SkillService,
+        private netConnection: NetConnectionService,
+        private departmentService: DepartmentService,
+        private alertService: AlertService,
+        private location: Location) {
+        this.netConnection.getConnectionState().subscribe(online => {
+            if (online) {
+                this.offline = false;
+            } else {
+                this.offline = true;
+            }
+        });
+    }
 
     ngOnInit() {
         this.editSkill = this.skillForm.skillFormBuilder;
 
-        this.route.paramMap.subscribe( (params: ParamMap) => {
+        this.route.paramMap.subscribe((params: ParamMap) => {
             const id = params.get('id');
             this.skillId = id;
-          });
+        });
 
         if (this.offline) {
             this.skillService.getSkill(this.skillId).then((skills) => {
@@ -55,7 +56,10 @@ export class EditSkillComponent implements OnInit {
                 this.initializeValues(this.skill);
             });
         } else {
-            const skillArray = this.skillService.getSkills();
+            let skillArray: ISkills[];
+            this.skillService.skillsFromAPI().subscribe(apiSkill => {
+                skillArray = apiSkill;
+            });
             this.skill = this.getSelectedSkill(skillArray, this.skillId);
             this.initializeValues(this.skill);
         }

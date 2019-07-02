@@ -75,40 +75,56 @@ export class EditEmployeeComponent implements OnInit {
     private skillsList: ISkills[];
     private offline: boolean;
 
-    constructor( private employeeService: EmployeeService,
-                 private route: ActivatedRoute,
-                 private departmentService: DepartmentService,
-                 private designationService: DesignationService,
-                 private skillService: SkillService,
-                 private employeeForm: FormBuilderService,
-                 private formBuilder: FormBuilder,
-                 private netConnection: NetConnectionService,
-                 private alertService: AlertService,
-                 private location: Location) {
-                    this.netConnection.getConnectionState().subscribe(online => {
-                        if (online) {
-                            this.offline = false;
-                        } else {
-                            this.offline = true;
-                        }
-                    });
-                 }
+    constructor(
+        private employeeService: EmployeeService,
+        private route: ActivatedRoute,
+        private departmentService: DepartmentService,
+        private designationService: DesignationService,
+        private skillService: SkillService,
+        private employeeForm: FormBuilderService,
+        private formBuilder: FormBuilder,
+        private netConnection: NetConnectionService,
+        private alertService: AlertService,
+        private location: Location) {
+        this.netConnection.getConnectionState().subscribe(online => {
+            if (online) {
+                this.offline = false;
+                this.designationService.designationsFromAPI().subscribe(desFromAPI => {
+                    this.designations = desFromAPI;
+                });
+                this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
+                    this.departments = depFromAPI;
+                });
+                this.skillService.skillsFromAPI().subscribe(skillFromAPI => {
+                    this.skillsList = skillFromAPI;
+                });
+            } else {
+                this.offline = true;
+                this.designationService.designationsFromDB().then(desFromDB => {
+                    this.designations = desFromDB;
+                });
+                this.departmentService.departmentsFromDB().then(depFromDB => {
+                    this.departments = depFromDB;
+                });
+                this.skillService.skillsFromDB().then(skillFromDB => {
+                    this.skillsList = skillFromDB;
+                });
+            }
+        });
+    }
 
     ngOnInit() {
         this.route.paramMap.subscribe((params: ParamMap) => {
             const id = params.get('id');
             this.empId = id;
-          });
+        });
 
         this.employeeService.selectedEmployee(this.empId)
-        .subscribe( data => (this.selectedEmployee = data,
-                                console.log('Selected Employee: ', this.selectedEmployee),
-                                this.initializeValue(this.selectedEmployee)),
-                    error => console.log(error));
+            .subscribe(data => (this.selectedEmployee = data,
+                console.log('Selected Employee: ', this.selectedEmployee),
+                this.initializeValue(this.selectedEmployee)),
+                error => console.log(error));
 
-        this.departments = this.departmentService.getDepartments();
-        this.designations = this.designationService.getDesignations();
-        this.skillsList = this.skillService.getSkills();
     }
 
     initializeValue(selectedEmployee: IEmployee) {

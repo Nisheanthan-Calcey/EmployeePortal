@@ -8,6 +8,7 @@ import { DepartmentService } from 'src/services/department.service';
 import { SkillService } from 'src/services/skill.service';
 
 import { IDepartment } from 'src/components/department/department.interface';
+import { NetConnectionService } from 'src/services/shared/connection.service';
 
 @Component({
     selector: 'add-skill',
@@ -19,13 +20,26 @@ export class AddSkillComponent {
     private newSkill: FormGroup = this.skillForm.skillFormBuilder;
     private departments: IDepartment[];
 
-    constructor(private departmentService: DepartmentService,
-                private skillService: SkillService,
-                private skillForm: FormBuilderService,
-                private alertService: AlertService,
-                private location: Location) {
-                    this.departments = this.departmentService.getDepartments();
-                }
+    constructor(
+        private departmentService: DepartmentService,
+        private skillService: SkillService,
+        private skillForm: FormBuilderService,
+        private alertService: AlertService,
+        private location: Location,
+        private netConnection: NetConnectionService) {
+        this.netConnection.getConnectionState().subscribe(online => {
+            if (online) {
+                this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
+                    this.departments = depFromAPI;
+                });
+                this.departmentService.updateServer();
+            } else {
+                this.departmentService.departmentsFromDB().then(depFromDB => {
+                    this.departments = depFromDB;
+                });
+            }
+        });
+    }
 
     addSkill() {
         if (this.newSkill.value.departmentId && this.newSkill.value.name) {
@@ -43,7 +57,7 @@ export class AddSkillComponent {
                 }
             }
         } else {
-            alert ('All Fields are Mandatory');
+            alert('All Fields are Mandatory');
         }
     }
 }

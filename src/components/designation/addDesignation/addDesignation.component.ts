@@ -8,6 +8,7 @@ import { DesignationService } from 'src/services/designation.service';
 import { DepartmentService } from 'src/services/department.service';
 
 import { IDepartment } from 'src/components/department/department.interface';
+import { NetConnectionService } from 'src/services/shared/connection.service';
 
 @Component({
     selector: 'add-designation',
@@ -16,16 +17,28 @@ import { IDepartment } from 'src/components/department/department.interface';
 })
 
 export class AddDesignationComponent {
-    private newDesignation: FormGroup  = this.designationForm.designationFormBuilder;
+    private newDesignation: FormGroup = this.designationForm.designationFormBuilder;
     private departments: IDepartment[];
 
-    constructor(private designationService: DesignationService,
-                private departmentService: DepartmentService,
-                private designationForm: FormBuilderService,
-                private alertService: AlertService,
-                private location: Location) {
-                    this.departments = this.departmentService.getDepartments();
-                }
+    constructor(
+        private designationService: DesignationService,
+        private departmentService: DepartmentService,
+        private designationForm: FormBuilderService,
+        private alertService: AlertService,
+        private location: Location,
+        private netConnection: NetConnectionService) {
+        this.netConnection.getConnectionState().subscribe(online => {
+            if (online) {
+                this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
+                    this.departments = depFromAPI;
+                });
+            } else {
+                this.departmentService.departmentsFromDB().then(depFromDB => {
+                    this.departments = depFromDB;
+                });
+            }
+        });
+    }
 
     addDesignation() {
         if (this.newDesignation.value.departmentId && this.newDesignation.value.name) {
@@ -43,7 +56,7 @@ export class AddDesignationComponent {
                 }
             }
         } else {
-            alert ('All Fields are Mandatory');
+            alert('All Fields are Mandatory');
         }
     }
 }

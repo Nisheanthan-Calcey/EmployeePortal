@@ -24,26 +24,27 @@ export class EditDesignationComponent implements OnInit {
     private department: IDepartment['displayName'];
     private offline: boolean;
 
-    constructor(private designationForm: FormBuilderService,
-                private route: ActivatedRoute,
-                private designationService: DesignationService,
-                private netConnection: NetConnectionService,
-                private departmentService: DepartmentService,
-                private alertService: AlertService,
-                private location: Location) {
-                    this.netConnection.getConnectionState().subscribe(online => {
-                        if (online) {
-                            this.offline = false;
-                        } else {
-                            this.offline = true;
-                        }
-                    });
-                }
+    constructor(
+        private designationForm: FormBuilderService,
+        private route: ActivatedRoute,
+        private designationService: DesignationService,
+        private netConnection: NetConnectionService,
+        private departmentService: DepartmentService,
+        private alertService: AlertService,
+        private location: Location) {
+        this.netConnection.getConnectionState().subscribe(online => {
+            if (online) {
+                this.offline = false;
+            } else {
+                this.offline = true;
+            }
+        });
+    }
 
     editDesignation: FormGroup = this.designationForm.designationFormBuilder;
 
     ngOnInit() {
-        this.route.paramMap.subscribe( (params: ParamMap) => {
+        this.route.paramMap.subscribe((params: ParamMap) => {
             const id = params.get('id');
             this.desId = id;
         });
@@ -54,7 +55,10 @@ export class EditDesignationComponent implements OnInit {
                 this.initializeValues(this.designation);
             });
         } else {
-            const desArray = this.designationService.getDesignations();
+            let desArray;
+            this.designationService.designationsFromAPI().subscribe(desFromAPI => {
+                desArray = desFromAPI;
+            });
             this.designation = this.getSelectedDesignation(desArray, this.desId);
             this.initializeValues(this.designation);
         }

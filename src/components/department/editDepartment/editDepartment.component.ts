@@ -21,28 +21,29 @@ export class EditDepartmentComponent implements OnInit {
     private department: IDepartment;
     private offline: boolean;
 
-    constructor(private departmentService: DepartmentService,
-                private route: ActivatedRoute,
-                private departmentForm: FormBuilderService,
-                private netConnection: NetConnectionService,
-                private alertService: AlertService,
-                private location: Location) {
-                    this.netConnection.getConnectionState().subscribe(online => {
-                        if (online) {
-                            this.offline = false;
-                        } else {
-                            this.offline = true;
-                        }
-                    });
-                }
+    constructor(
+        private departmentService: DepartmentService,
+        private route: ActivatedRoute,
+        private departmentForm: FormBuilderService,
+        private netConnection: NetConnectionService,
+        private alertService: AlertService,
+        private location: Location) {
+        this.netConnection.getConnectionState().subscribe(online => {
+            if (online) {
+                this.offline = false;
+            } else {
+                this.offline = true;
+            }
+        });
+    }
 
     editDepartment: FormGroup = this.departmentForm.departmentFormBuilder;
 
     ngOnInit() {
-        this.route.paramMap.subscribe( (params: ParamMap) => {
+        this.route.paramMap.subscribe((params: ParamMap) => {
             const id = params.get('id');
             this.depId = id;
-          });
+        });
 
         if (this.offline) {
             this.departmentService.getDepartment(this.depId).then((department) => {
@@ -50,7 +51,10 @@ export class EditDepartmentComponent implements OnInit {
                 this.initializeValues(this.department);
             });
         } else {
-            const depArray = this.departmentService.getDepartments();
+            let depArray;
+            this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
+                depArray = depFromAPI;
+            });
             this.department = this.getSelectedDepartment(depArray, this.depId);
             this.initializeValues(this.department);
         }

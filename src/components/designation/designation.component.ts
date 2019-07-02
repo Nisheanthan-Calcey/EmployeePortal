@@ -4,6 +4,7 @@ import { AlertService } from 'src/services/shared/alert.service';
 import { DesignationService } from 'src/services/designation.service';
 
 import { IDesignation } from './designation.interface';
+import { NetConnectionService } from 'src/services/shared/connection.service';
 
 @Component({
   selector: 'app-designation',
@@ -13,10 +14,22 @@ import { IDesignation } from './designation.interface';
 export class DesignationComponent {
   public designations: IDesignation[];
 
-  constructor(private designationService: DesignationService,
-              private alertService: AlertService) {
-    this.designations = this.designationService.getDesignations();
-    this.designationService.updateServer();
+  constructor(
+    private designationService: DesignationService,
+    private alertService: AlertService,
+    private netConnectionService: NetConnectionService) {
+    this.netConnectionService.getConnectionState().subscribe(online => {
+      if (online) {
+        this.designationService.designationsFromAPI().subscribe(apiDes => {
+          this.designations = apiDes;
+        });
+        this.designationService.updateServer();
+      } else {
+        this.designationService.designationsFromDB().then(des => {
+          this.designations = des;
+        });
+      }
+    });
   }
 
   deleteDesignation(id: string) {
