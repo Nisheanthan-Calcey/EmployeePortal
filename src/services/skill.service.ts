@@ -3,13 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { SQLitePorter } from '@ionic-native/sqlite-porter/ngx';
 import { Observable, from } from 'rxjs';
 
+import { DatabaseService } from './shared/database.service';
 import { ApiHeaderService } from './shared/apiHeader.service';
 import { NetConnectionService } from './shared/connection.service';
 import { DepartmentService } from './department.service';
 
 import { ISkills } from 'src/components/skill/skill.interface';
 import { IDepartment } from 'src/components/department/department.interface';
-import { DatabaseService } from './shared/database.service';
 
 @Injectable()
 export class SkillService {

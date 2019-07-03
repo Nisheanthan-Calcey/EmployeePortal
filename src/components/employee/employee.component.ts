@@ -5,6 +5,7 @@ import { AlertService } from 'src/services/shared/alert.service';
 import { EmployeeService } from 'src/services/employee.service';
 
 import { IEmployee } from './employee.interface';
+import { NetConnectionService } from 'src/services/shared/connection.service';
 
 @Component({
   selector: 'app-employee',
@@ -14,11 +15,23 @@ import { IEmployee } from './employee.interface';
 export class EmployeeComponent {
   public employees: IEmployee[];
 
-  constructor(private employeeService: EmployeeService,
-              private router: Router,
-              private alertService: AlertService) {
-                this.employees = this.employeeService.getEmployees();
-              }
+  constructor(
+    private employeeService: EmployeeService,
+    private router: Router,
+    private alertService: AlertService,
+    private netConnectionService: NetConnectionService) {
+    this.netConnectionService.getConnectionState().subscribe(online => {
+      if (online) {
+        this.employeeService.employeesFromAPI().subscribe(empFromAPI => {
+          this.employees = empFromAPI;
+        });
+      } else {
+        this.employeeService.employeesFromDB().then(empFromDB => {
+          this.employees = empFromDB;
+        });
+      }
+    });
+  }
 
   selectEmployee(id: string) {
     this.router.navigate(['home/employee', id]);

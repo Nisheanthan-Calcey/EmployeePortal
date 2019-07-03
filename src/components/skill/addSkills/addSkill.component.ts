@@ -32,7 +32,6 @@ export class AddSkillComponent {
                 this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
                     this.departments = depFromAPI;
                 });
-                this.departmentService.updateServer();
             } else {
                 this.departmentService.departmentsFromDB().then(depFromDB => {
                     this.departments = depFromDB;

@@ -38,7 +38,7 @@ export class EmployeeService {
         });
     }
 
-    getEmployees(): Observable<IEmployee[]> {
+    employeesFromAPI(): Observable<IEmployee[]> {
         return new Observable(observer => {
             let employees: IEmployee[];
             this.http.get<any[]>(`${this.ROOT_URL}`, { headers: this.headers }).subscribe(data => {
@@ -64,14 +64,14 @@ export class EmployeeService {
 
     employeesFromDB(): Promise<IEmployee[]> {
         const employees: IEmployee[] = [];
-        return this.databaseService.database.executeSql('SELECT * FROM employee', []).then((data) => {
+        return this.databaseService.database.executeSql('SELECT * FROM employee', []).then(async (data) => {
             if (data.rows.length > 0) {
                 for (let i = 0; i < data.rows.length; i++) {
                     const depId = data.rows.item(i).department;
                     const desId = data.rows.item(i).designation;
-                    this.departmentService.getDepartment(depId).then((dep) => {
-                        this.designationService.getDesignation(desId).then((des) => {
-                            employees.push({
+                    await this.departmentService.getDepartment(depId).then(async (dep) => {
+                        await this.designationService.getDesignation(desId).then(async (des) => {
+                            await employees.push({
                                 id: data.rows.item(i).id,
                                 firstName: data.rows.item(i).firstName,
                                 lastName: data.rows.item(i).lastName,

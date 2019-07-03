@@ -20,11 +20,11 @@ export class DepartmentComponent {
       if (online) {
         console.log('ONLINE');
         this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
-          console.log(depFromAPI, 'check');
           this.departments = depFromAPI;
         });
-        this.departmentService.updateServer();
+        this.departmentService.mergeServerDB();
       } else {
+        console.log('OFFLINE');
         this.departmentService.departmentsFromDB().then(depFromDB => {
           this.departments = depFromDB;
         });

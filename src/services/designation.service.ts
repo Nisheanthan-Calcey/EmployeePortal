@@ -44,15 +44,17 @@ export class DesignationService {
                 console.log('Designations from API: ', designations);
                 observer.next(designations);
                 observer.complete();
-                this.databaseService.database.executeSql('SELECT * FROM designation', []).then(dbDes => {
-                    if (dbDes.rows.length === 0) {
-                        console.log('adding designations to local db');
-                        this.updateLocalDb(designations);
-                    }
-                }, error => {
-                    console.log('adding designations to local db');
-                    this.updateLocalDb(designations);
-                });
+                // this.databaseService.database.executeSql('SELECT * FROM designation', []).then(dbDes => {
+                //     if (dbDes.rows.length < designations.length) {
+                //         console.log(dbDes, 'db des');
+                //         const addToDB = designations.filter(api => !dbDes.some(db => api.id === db.id));
+                //         console.log('adding designations to local db', addToDB);
+                //         this.updateLocalDb(addToDB);
+                //     }
+                // }, error => {
+                //     console.log('adding designations to local db');
+                //     this.updateLocalDb(designations);
+                // });
             },
                 error => {
                     console.log('error on retrieving data');

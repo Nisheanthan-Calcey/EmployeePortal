@@ -4,6 +4,7 @@ import { AlertService } from 'src/services/shared/alert.service';
 import { SkillService } from 'src/services/skill.service';
 
 import { ISkills } from './skill.interface';
+import { NetConnectionService } from 'src/services/shared/connection.service';
 
 @Component({
   selector: 'app-skill',
@@ -13,10 +14,22 @@ import { ISkills } from './skill.interface';
 export class SkillComponent {
   public skills: ISkills[];
 
-  constructor(private skillService: SkillService,
-              private alertService: AlertService) {
-    this.skills = this.skillService.getSkills();
-   }
+  constructor(
+    private skillService: SkillService,
+    private alertService: AlertService,
+    private netConnectionService: NetConnectionService) {
+    this.netConnectionService.getConnectionState().subscribe(online => {
+      if (online) {
+        this.skillService.skillsFromAPI().subscribe(skillFromAPI => {
+          this.skills = skillFromAPI;
+        });
+      } else {
+        this.skillService.skillsFromDB().then(skillFromDB => {
+          this.skills = skillFromDB;
+        });
+      }
+    });
+  }
 
   deleteSkill(id: string) {
     const confirm = this.alertService.confirmDelete();

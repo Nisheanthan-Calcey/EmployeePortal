@@ -2,13 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { SQLitePorter } from '@ionic-native/sqlite-porter/ngx';
 import { Observable, from, forkJoin } from 'rxjs';
+import * as _ from 'lodash';
 
 import { NetConnectionService } from './shared/connection.service';
 import { ApiHeaderService } from './shared/apiHeader.service';
 
 import { IDepartment } from 'src/components/department/department.interface';
 import { DatabaseService } from './shared/database.service';
-import { threadId } from 'worker_threads';
 
 @Injectable()
 export class DepartmentService {
@@ -34,8 +34,8 @@ export class DepartmentService {
         });
     }
 
-    departmentsFromAPI(): Observable<any> {
-        return new Observable<any>(observer => {
+    departmentsFromAPI(): Observable<IDepartment[]> {
+        return new Observable<IDepartment[]>(observer => {
             let departments: IDepartment[];
             this.http.get<any[]>(`${this.ROOT_URL}?query=%7B%7D`, { headers: this.headers }).subscribe(data => {
                 Object.values(data)
@@ -43,7 +43,18 @@ export class DepartmentService {
                 console.log('Departments from API: ', departments);
                 observer.next(departments);
                 observer.complete();
-                // this.updateLocalDb(departments);
+                // this.databaseService.database.executeSql('SELECT * FROM department', []).then(dbDep => {
+                //     if (dbDep.rows.length < departments.length) {
+                //         console.log(dbDep.rows, 'db dep');
+                //         const addToDB = departments.filter(api => !dbDep.rows.some(db => api.id === db.id));
+                //         console.log(addToDB, 'check');
+
+                //         this.updateLocalDb(addToDB);
+                //     }
+                // }, error => {
+                //     console.log('adding department to local db');
+                //     this.updateLocalDb(departments);
+                // });
             },
                 error => {
                     alert('Error on API, Trying to fetch Departments from Database');
@@ -149,27 +160,35 @@ export class DepartmentService {
         }
     }
 
-    updateServer() {
+    mergeServerDB() {
         forkJoin(
             this.departmentsFromDB(),
             this.departmentsFromAPI()
         ).subscribe(data => {
             const depFromDB = data[0];
             const depFromAPI = data[1];
-            if (depFromDB && depFromAPI) {
-                depFromDB.forEach(dDep => {
-                    depFromAPI.forEach(aDep => {
-                        if (dDep.id === aDep.id) {
-                            const index = depFromDB.indexOf(dDep, 0);
-                            depFromDB.splice(index, 1);
-                        }
-                    });
-                });
-                console.log(depFromDB, 'after splice');
-                depFromDB.forEach(dep => {
-                    // console.log(dep, 'check format');
-                });
+            const addToDB = depFromAPI.filter(api => !depFromDB.some(db => api.id === db.id));
+            const addToServer = depFromDB.filter(db => !depFromAPI.some(api => db.id === api.id));
+            console.log(addToDB, 'add to db');
+            console.log(addToServer, 'add to server');
+            if (addToDB.length) {
+                this.addToDB(addToDB);
             }
+            if (addToServer.length) {
+                this.addToServer(addToServer);
+            }
+        });
+    }
+
+    addToServer(departments) {
+        departments.forEach(dep => {
+            // adding to server will be done here
+        });
+    }
+
+    addToDB(departments) {
+        departments.forEach(dep => {
+            // adding to db will be done here
         });
     }
 }
