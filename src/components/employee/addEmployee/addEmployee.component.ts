@@ -12,7 +12,7 @@ import { SkillService } from 'src/services/skill.service';
 import { IDepartment } from 'src/components/department/department.interface';
 import { IDesignation } from 'src/components/designation/designation.interface';
 import { ISkills } from 'src/components/skill/skill.interface';
-import { NetConnectionService } from 'src/services/shared/connection.service';
+import { NetConnectionService, ConnectionStatus } from 'src/services/shared/connection.service';
 
 @Component({
     selector: 'add-employee',
@@ -76,15 +76,15 @@ export class AddEmployeeComponent {
         private employeeForm: FormBuilderService,
         private alertService: AlertService,
         private location: Location,
-        private netConnection: NetConnectionService) {
-        this.netConnection.getConnectionState().subscribe(online => {
-            if (online) {
-                this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
-                    this.departments = depFromAPI;
-                });
-            } else {
+        private netConnectionService: NetConnectionService) {
+        this.netConnectionService.onNetworkChange().subscribe((status: ConnectionStatus) => {
+            if (status === ConnectionStatus.Offline) {
                 this.departmentService.departmentsFromDB().then(depFromDB => {
                     this.departments = depFromDB;
+                });
+            } else {
+                this.departmentService.departmentsFromServer().subscribe(depFromAPI => {
+                    this.departments = depFromAPI;
                 });
             }
         });

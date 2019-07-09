@@ -5,7 +5,7 @@ import { Observable, from } from 'rxjs';
 
 import { DatabaseService } from './shared/database.service';
 import { ApiHeaderService } from './shared/apiHeader.service';
-import { NetConnectionService } from './shared/connection.service';
+import { NetConnectionService, ConnectionStatus } from './shared/connection.service';
 import { DepartmentService } from './department.service';
 import { DesignationService } from './designation.service';
 import { SkillService } from './skill.service';
@@ -18,7 +18,6 @@ export class EmployeeService {
     private headers = this.headerService.header;
     private dbEmployeeList: IEmployee[];
     private employeeArray: IEmployee[];
-    private online: boolean;
 
     constructor(
         private http: HttpClient,
@@ -28,15 +27,7 @@ export class EmployeeService {
         private sqlitePorter: SQLitePorter,
         private departmentService: DepartmentService,
         private designationService: DesignationService,
-        private skillService: SkillService) {
-        this.connectionService.getConnectionState().subscribe((online) => {
-            if (online) {
-                this.online = true;
-            } else {
-                this.online = false;
-            }
-        });
-    }
+        private skillService: SkillService) { }
 
     employeesFromAPI(): Observable<IEmployee[]> {
         return new Observable(observer => {
@@ -45,13 +36,13 @@ export class EmployeeService {
                 (Object.values(data)
                     .map(values => employees = values),
                     console.log('Employees from API: ', employees));
-                this.databaseService.database.executeSql('SELECT * FROM employee', []).then(dbEmployee => {
-                    if (dbEmployee.rows.length === 0) {
-                        this.updateLocalDb(employees);
-                    }
-                }, error => {
-                    this.updateLocalDb(employees);
-                });
+                // this.databaseService.database.executeSql('SELECT * FROM employee', []).then(dbEmployee => {
+                //     if (dbEmployee.rows.length === 0) {
+                //         this.updateLocalDb(employees);
+                //     }
+                // }, error => {
+                //     this.updateLocalDb(employees);
+                // });
                 observer.next(employees);
                 observer.complete();
             },
@@ -98,7 +89,7 @@ export class EmployeeService {
 
     selectedEmployee(id: IEmployee['id']): Observable<any> {
         return new Observable<any>(observer => {
-            if (this.online) {
+            if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
                 let selEmp: IEmployee[];
                 this.http.get<any[]>(`${this.ROOT_URL}/${id}`, { headers: this.headers }).subscribe(data => {
                     Object.values(data).map(emp => { selEmp = emp; });
@@ -181,7 +172,7 @@ export class EmployeeService {
             alert('Indicated Fields are Mandatory');
         }
 
-        if (this.online) {
+        if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
             this.http.post<IEmployee[]>(`${this.ROOT_URL}`, employee, { headers: this.headers })
                 .subscribe(() => console.log('Added New Employee to Server'),
                     error => console.log('Error on Adding to server'));
@@ -191,7 +182,7 @@ export class EmployeeService {
 
     updateEmployee(employee: IEmployee): Observable<void> {
         let editEmp: Observable<void>;
-        if (this.online) {
+        if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
             editEmp = this.http.put<void>(`${this.ROOT_URL}/${employee.id}`, employee, { headers: this.headers });
         } else {
             const emp: any = employee;
@@ -237,7 +228,7 @@ export class EmployeeService {
 
     delEmployee(id: IEmployee['id']): Observable<void> {
         let delEmp: Observable<void>;
-        if (this.online) {
+        if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
             delEmp = this.http.delete<void>(`${this.ROOT_URL}/${id}?force=true`, { headers: this.headers });
         } else {
             delEmp = from(this.databaseService.database.executeSql('DELETE FROM employee WHERE id = ?', [id]).then(data => {

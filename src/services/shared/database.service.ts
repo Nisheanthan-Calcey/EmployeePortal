@@ -6,17 +6,17 @@ import { SQLiteObject, SQLite } from '@ionic-native/sqlite/ngx';
 export class DatabaseService {
   public database: SQLiteObject;
 
-  constructor(private plt: Platform,
-              private sqlite: SQLite) {
-                this.plt.ready().then(() => {
-                  this.sqlite.create({
-                    name: 'data.db',
-                    location: 'default',
-                  }).then((db: SQLiteObject) => {
-                    console.log('db', db);
-                    this.database = db;
-                  }).catch(e => console.log(e));
-                });
-              }
+  constructor(
+    private plt: Platform,
+    private sqlite: SQLite) {
+    this.plt.ready().then(() => {
+      this.sqlite.create({
+        name: 'data.db',
+        location: 'default',
+      }).then((db: SQLiteObject) => {
+        this.database = db;
+      }).catch(e => console.log(e));
+    });
+  }
 
 }

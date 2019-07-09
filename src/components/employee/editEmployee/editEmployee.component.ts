@@ -5,7 +5,7 @@ import { Location } from '@angular/common';
 
 import { AlertService } from 'src/services/shared/alert.service';
 import { FormBuilderService } from 'src/services/shared/formBuilder.service';
-import { NetConnectionService } from 'src/services/shared/connection.service';
+import { NetConnectionService, ConnectionStatus } from 'src/services/shared/connection.service';
 import { EmployeeService } from 'src/services/employee.service';
 import { DepartmentService } from 'src/services/department.service';
 import { DesignationService } from 'src/services/designation.service';
@@ -83,22 +83,11 @@ export class EditEmployeeComponent implements OnInit {
         private skillService: SkillService,
         private employeeForm: FormBuilderService,
         private formBuilder: FormBuilder,
-        private netConnection: NetConnectionService,
+        private netConnectionService: NetConnectionService,
         private alertService: AlertService,
         private location: Location) {
-        this.netConnection.getConnectionState().subscribe(online => {
-            if (online) {
-                this.offline = false;
-                this.designationService.designationsFromAPI().subscribe(desFromAPI => {
-                    this.designations = desFromAPI;
-                });
-                this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
-                    this.departments = depFromAPI;
-                });
-                this.skillService.skillsFromAPI().subscribe(skillFromAPI => {
-                    this.skillsList = skillFromAPI;
-                });
-            } else {
+        this.netConnectionService.onNetworkChange().subscribe((status: ConnectionStatus) => {
+            if (status === ConnectionStatus.Offline) {
                 this.offline = true;
                 this.designationService.designationsFromDB().then(desFromDB => {
                     this.designations = desFromDB;
@@ -108,6 +97,17 @@ export class EditEmployeeComponent implements OnInit {
                 });
                 this.skillService.skillsFromDB().then(skillFromDB => {
                     this.skillsList = skillFromDB;
+                });
+            } else {
+                this.offline = false;
+                this.designationService.designationsFromServer().subscribe(desFromAPI => {
+                    this.designations = desFromAPI;
+                });
+                this.departmentService.departmentsFromServer().subscribe(depFromAPI => {
+                    this.departments = depFromAPI;
+                });
+                this.skillService.skillsFromServer().subscribe(skillFromAPI => {
+                    this.skillsList = skillFromAPI;
                 });
             }
         });

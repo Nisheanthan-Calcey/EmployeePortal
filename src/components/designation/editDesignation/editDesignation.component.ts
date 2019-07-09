@@ -5,7 +5,7 @@ import { Location } from '@angular/common';
 
 import { AlertService } from 'src/services/shared/alert.service';
 import { FormBuilderService } from 'src/services/shared/formBuilder.service';
-import { NetConnectionService } from 'src/services/shared/connection.service';
+import { NetConnectionService, ConnectionStatus } from 'src/services/shared/connection.service';
 import { DesignationService } from 'src/services/designation.service';
 import { DepartmentService } from 'src/services/department.service';
 
@@ -28,14 +28,12 @@ export class EditDesignationComponent implements OnInit {
         private designationForm: FormBuilderService,
         private route: ActivatedRoute,
         private designationService: DesignationService,
-        private netConnection: NetConnectionService,
+        private netConnectionService: NetConnectionService,
         private departmentService: DepartmentService,
         private alertService: AlertService,
         private location: Location) {
-        this.netConnection.getConnectionState().subscribe(online => {
-            if (online) {
-                this.offline = false;
-            } else {
+        this.netConnectionService.onNetworkChange().subscribe((status: ConnectionStatus) => {
+            if (status === ConnectionStatus.Offline) {
                 this.offline = true;
             }
         });
@@ -56,7 +54,7 @@ export class EditDesignationComponent implements OnInit {
             });
         } else {
             let desArray;
-            this.designationService.designationsFromAPI().subscribe(desFromAPI => {
+            this.designationService.designationsFromServer().subscribe(desFromAPI => {
                 desArray = desFromAPI;
             });
             this.designation = this.getSelectedDesignation(desArray, this.desId);

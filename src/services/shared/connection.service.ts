@@ -1,32 +1,48 @@
 import { Injectable } from '@angular/core';
 import { Network } from '@ionic-native/network/ngx';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { share, publishReplay, publish } from 'rxjs/operators';
 
-@Injectable()
+export enum ConnectionStatus {
+  Online,
+  Offline
+}
+
+@Injectable({
+  providedIn: 'root'
+})
 export class NetConnectionService {
-  isConnected: BehaviorSubject<boolean> = new BehaviorSubject(false);
+
+  private status: BehaviorSubject<ConnectionStatus> = new BehaviorSubject(ConnectionStatus.Offline);
 
   constructor(private network: Network) {
-      const networkType = this.network.type;
-
-      if (networkType === 'none') {
-        this.isConnected.next(false);
-      } else {
-        this.isConnected.next(true);
-      }
-
-      this.network.onConnect().subscribe(() => {
-        alert('You are now online!');
-        this.isConnected.next(true);
-      });
-
-      this.network.onDisconnect().subscribe(() => {
-        alert('You are now offline!');
-        this.isConnected.next(false);
-      });
+    this.initializeNetworkEvents();
+    const status = this.network.type !== 'none' ? ConnectionStatus.Online : ConnectionStatus.Offline;
+    this.status.next(status);
   }
 
-  getConnectionState() {
-    return this.isConnected.asObservable();
+  public initializeNetworkEvents() {
+
+    this.network.onDisconnect().subscribe(() => {
+      if (this.status.getValue() === ConnectionStatus.Online) {
+        alert('WE ARE OFFLINE');
+        this.status.next(ConnectionStatus.Offline);
+      }
+    });
+
+    this.network.onConnect().subscribe(() => {
+      if (this.status.getValue() === ConnectionStatus.Offline) {
+        alert('WE ARE ONLINE');
+        this.status.next(ConnectionStatus.Online);
+      }
+    });
+  }
+
+  public onNetworkChange(): Observable<ConnectionStatus> {
+    return this.status.asObservable();
+  }
+
+  public getCurrentNetworkStatus(): ConnectionStatus {
+    return this.status.getValue();
   }
 }

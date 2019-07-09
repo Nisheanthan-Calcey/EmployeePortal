@@ -8,7 +8,7 @@ import { DesignationService } from 'src/services/designation.service';
 import { DepartmentService } from 'src/services/department.service';
 
 import { IDepartment } from 'src/components/department/department.interface';
-import { NetConnectionService } from 'src/services/shared/connection.service';
+import { NetConnectionService, ConnectionStatus } from 'src/services/shared/connection.service';
 
 @Component({
     selector: 'add-designation',
@@ -26,15 +26,15 @@ export class AddDesignationComponent {
         private designationForm: FormBuilderService,
         private alertService: AlertService,
         private location: Location,
-        private netConnection: NetConnectionService) {
-        this.netConnection.getConnectionState().subscribe(online => {
-            if (online) {
-                this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
-                    this.departments = depFromAPI;
-                });
-            } else {
+        private netConnectionService: NetConnectionService) {
+        this.netConnectionService.onNetworkChange().subscribe((status: ConnectionStatus) => {
+            if (status === ConnectionStatus.Offline) {
                 this.departmentService.departmentsFromDB().then(depFromDB => {
                     this.departments = depFromDB;
+                });
+            } else {
+                this.departmentService.departmentsFromServer().subscribe(depFromAPI => {
+                    this.departments = depFromAPI;
                 });
             }
         });
@@ -42,9 +42,13 @@ export class AddDesignationComponent {
 
     addDesignation() {
         if (this.newDesignation.value.departmentId && this.newDesignation.value.name) {
+            const desId = require('uuid/v4');
+            this.newDesignation.patchValue({
+                id: desId()
+            });
             const confirm = this.alertService.confirmAdd('Designation', this.newDesignation.value.name);
             if (confirm) {
-                const addDesignation = this.designationService.addNewDesignation(this.newDesignation.value);
+                const addDesignation = this.designationService.addDesToDB(this.newDesignation.value);
                 if (addDesignation != null) {
                     addDesignation.subscribe(
                         (data) => {

@@ -1,22 +1,21 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { SQLitePorter } from '@ionic-native/sqlite-porter/ngx';
+import { Observable, from, forkJoin } from 'rxjs';
 
-import { NetConnectionService } from './shared/connection.service';
+import { DatabaseService } from './shared/database.service';
+import { NetConnectionService, ConnectionStatus } from './shared/connection.service';
 import { ApiHeaderService } from './shared/apiHeader.service';
 import { DepartmentService } from './department.service';
 
 import { IDesignation } from 'src/components/designation/designation.interface';
-import { DatabaseService } from './shared/database.service';
-import { Observable, from, forkJoin } from 'rxjs';
 
 @Injectable()
 export class DesignationService {
     readonly ROOT_URL = 'http://animus.api.daily2/api/v1/Designations';
     private headers = this.headerService.header;
-    private online: boolean;
     private dbDesignationList: IDesignation[];
-    private apiDesignationList: IDesignation[];
+    private serverDesignationList: IDesignation[];
 
     constructor(
         private http: HttpClient,
@@ -25,29 +24,22 @@ export class DesignationService {
         private databaseService: DatabaseService,
         private sqlitePorter: SQLitePorter,
         private departmentService: DepartmentService
-    ) {
-        this.connectionService.getConnectionState().subscribe(online => {
-            if (online) {
-                this.online = true;
-            } else {
-                this.online = false;
-            }
-        });
-    }
+    ) { }
 
-    designationsFromAPI(): Observable<IDesignation[]> {
+    designationsFromServer(): Observable<IDesignation[]> {
         return new Observable<IDesignation[]>(observer => {
             let designations: IDesignation[];
             this.http.get<any[]>(`${this.ROOT_URL}?query=%7B%7D`, { headers: this.headers }).subscribe(data => {
                 Object.values(data)
                     .map(values => designations = values);
-                console.log('Designations from API: ', designations);
+                console.log('Designations from Server: ', designations);
+                this.updateLocalDb(designations);
                 observer.next(designations);
                 observer.complete();
                 // this.databaseService.database.executeSql('SELECT * FROM designation', []).then(dbDes => {
                 //     if (dbDes.rows.length < designations.length) {
                 //         console.log(dbDes, 'db des');
-                //         const addToDB = designations.filter(api => !dbDes.some(db => api.id === db.id));
+                //         const addToDB = designations.filter(server => !dbDes.some(db => server.id === db.id));
                 //         console.log('adding designations to local db', addToDB);
                 //         this.updateLocalDb(addToDB);
                 //     }
@@ -57,7 +49,7 @@ export class DesignationService {
                 // });
             },
                 error => {
-                    console.log('error on retrieving data');
+                    alert('Error on API');
                     observer.error(error);
                 }
             );
@@ -98,11 +90,31 @@ export class DesignationService {
         });
     }
 
-    addNewDesignation(designation: any): Observable<IDesignation[]> {
+    addDesToServer(designation) {
+        this.http.post<IDesignation[]>(`${this.ROOT_URL}`, designation, { headers: this.headers }).
+            subscribe(d => {
+                const newId = Object.values(d)[0];
+                const query = `UPDATE designation SET id = ? WHERE id = ${JSON.stringify(designation.id)}`;
+                this.databaseService.database.executeSql(query, [newId]).then(val => {
+                    if (val.rowsAffected === 1) {
+                        this.designationsFromDB().then(desig => {
+                            this.dbDesignationList = desig;
+                        });
+                    } else {
+                        console.log('error on editing in db');
+                    }
+                });
+                this.designationsFromServer().subscribe(des => {
+                    this.serverDesignationList = des;
+                });
+            },
+                error => console.log('Error on Adding DB Designation to server'));
+    }
+
+    addDesToDB(designation: any): Observable<IDesignation[]> {
         let addNewDes: Observable<IDesignation[]>;
-        const desId = require('uuid/v4');
         const query = 'INSERT INTO designation (id, department, name) VALUES (?, ?, ?)';
-        const newDes = [desId(), designation.departmentId, designation.name];
+        const newDes = [designation.id, designation.departmentId, designation.name];
         addNewDes = from(this.databaseService.database.executeSql(query, newDes).then(data => {
             if (data.rowsAffected === 1) {
                 this.designationsFromDB().then(des => {
@@ -110,13 +122,7 @@ export class DesignationService {
                 });
             }
             return this.dbDesignationList;
-        })
-        );
-        if (this.online) {
-            this.http.post<IDesignation[]>(`${this.ROOT_URL}`, designation, { headers: this.headers }).
-                subscribe(() => console.log('Added New Designation to server'),
-                    error => console.log('Error on Adding to server'));
-        }
+        }));
         return addNewDes;
     }
 
@@ -128,9 +134,9 @@ export class DesignationService {
             });
         })
         );
-        if (this.online) {
+        if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
             this.http.delete<void>(`${this.ROOT_URL}/${id}?force=true`, { headers: this.headers }).
-                subscribe(api => console.log('Deleted from server'),
+                subscribe(server => console.log('Deleted from server'),
                     error => console.log('Error on deleting from server'));
         }
         return delDes;
@@ -140,20 +146,26 @@ export class DesignationService {
         let editDes: Observable<void>;
         const id = JSON.stringify(designation.id);
         const query = `UPDATE designation SET name = ? WHERE id = ${id}`;
-        const changeDes = [designation.name];
-        editDes = from(this.databaseService.database.executeSql(query, changeDes).then(data => {
+        editDes = from(this.databaseService.database.executeSql(query, [designation.name]).then(data => {
             if (data.rowsAffected === 1) {
                 this.designationsFromDB().then(des => {
                     this.dbDesignationList = des;
                 });
             } else {
-                console.log('error on editing in db');
+                console.log('Editing Designation at DB failed');
             }
         }));
-        if (this.online) {
+        if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
             this.http.put<void>(`${this.ROOT_URL}/${designation.id}`, designation, { headers: this.headers }).
-                subscribe(api => console.log('Editted in server'),
-                    error => console.log('Error on editting in server'));
+                subscribe(server => console.log('Edited Designation at Server'),
+                    error => console.log('Editing Designation at Server failed'));
+        } else {
+            this.databaseService.database.executeSql('CREATE TABLE IF NOT EXISTS editDesTable (id PRIMARY KEY)', []).then(_ => {
+                this.databaseService.database.executeSql(`
+                    INSERT INTO editDesTable (id) SELECT ${id}
+                        WHERE NOT EXISTS (SELECT * FROM editDesTable WHERE id = ${id})
+                `, []).then(data => { });
+            });
         }
         return editDes;
     }
@@ -161,7 +173,7 @@ export class DesignationService {
     getDesignationsByDepartment(id: string): Observable<any> {
         return new Observable<any>(observer => {
             let designations: IDesignation[] = [];
-            if (this.online) {
+            if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
                 // tslint:disable-next-line:max-line-length
                 const des = this.http.get<any[]>(`http://animus.api.daily2/api/v1/Departments/${id}/Designations`, { headers: this.headers });
                 des.subscribe(data => {
@@ -218,28 +230,24 @@ export class DesignationService {
         }
     }
 
-    updateServer() {
-        const checkEdit = [];
+    mergeServerDB() {
         forkJoin(
-            this.designationsFromAPI(),
+            this.designationsFromServer(),
             this.designationsFromDB()
         ).subscribe(data => {
-            const desFromAPI = data[0];
+            const desFromServer = data[0];
             const desFromDB = data[1];
-            console.log(desFromAPI, 'des from api');
-            console.log(desFromDB, 'des from db');
-            if (desFromDB && desFromAPI) {
-                desFromAPI.forEach(aDes => {
-                    desFromDB.forEach(dDes => {
-                        if (dDes.id === aDes.id) {
-                            const index = desFromDB.indexOf(dDes, 0);
-                            const repeated = desFromDB.splice(index, 1);
-                            checkEdit.push(repeated);
-                        }
-                    });
+            const addToDB = desFromServer.filter(server => !desFromDB.some(db => server.id === db.id));
+            const addToServer = desFromDB.filter(db => !desFromServer.some(server => db.id === server.id));
+            console.log('Designations missing From DB: ', addToDB);
+            console.log('Designations missing From Server', addToServer);
+            if (addToDB.length) {
+                addToDB.forEach(des => {
+                    this.addDesToDB(des).subscribe(() => { });
                 });
-                console.log(desFromDB, 'check after splice');
-                const desToAdd = desFromDB.map((des: any) => {
+            }
+            if (addToServer.length) {
+                const desToAdd = addToServer.map((des: any) => {
                     return {
                         name: des.name,
                         id: des.id,
@@ -247,27 +255,51 @@ export class DesignationService {
                     };
                 });
                 desToAdd.forEach(des => {
-                    console.log(des, 'adding des');
-                    this.http.post<IDesignation[]>(`${this.ROOT_URL}`, des, { headers: this.headers }).
-                        subscribe(d => {
-                            const newId = Object.values(d)[0];
-                            console.log(newId, 'here id');
-                            console.log(JSON.stringify(des.id), 'here des id');
-                            const query = `UPDATE designation SET id = ? WHERE id = ${JSON.stringify(des.id)}`;
-                            this.databaseService.database.executeSql(query, [newId]).then(val => {
-                                console.log(val, 'check here');
-                                if (val.rowsAffected === 1) {
-                                    this.designationsFromDB().then(desig => {
-                                        this.dbDesignationList = desig;
-                                    });
-                                } else {
-                                    console.log('error on editing in db');
-                                }
-                            });
-                        },
-                            error => console.log('Error on Adding DB des to server'));
+                    this.addDesToServer(des);
                 });
             }
+        });
+
+        this.getOfflineEdits().then(designations => {
+            console.log('Edited Des when offline: ', designations);
+            if (designations.length) {
+                designations.forEach(des => {
+                    this.http.put<void>(`${this.ROOT_URL}/${des.id}`, des, { headers: this.headers }).
+                        subscribe(() => {
+                            const id = JSON.stringify(des.id);
+                            this.databaseService.database.executeSql(`DELETE FROM editDesTable WHERE id = ${id}`, []).then(_ => { });
+                        },
+                            error => console.log('Editing Offline Des at Server failed')
+                        );
+                });
+            } else {
+                this.databaseService.database.executeSql('DROP TABLE IF EXISTS editDesTable', []).then(_ => {
+                    console.log('Department Offline Edit Table Dropped');
+                });
+            }
+        });
+    }
+
+    getOfflineEdits(): Promise<IDesignation[]> {
+        const dess: IDesignation[] = [];
+        this.databaseService.database.executeSql('CREATE TABLE IF NOT EXISTS editDesTable (id PRIMARY KEY)', []).then(data => {
+            console.log('Dummy Designation Edit Table Created');
+        });
+        return this.databaseService.database.executeSql(`SELECT * FROM designation
+            WHERE EXISTS (SELECT id FROM editDesTable WHERE designation.id = editDesTable.id)`, []).then(async data => {
+            if (data.rows.length) {
+                for (let i = 0; i < data.rows.length; i++) {
+                    const depId = data.rows.item(i).department;
+                    await this.departmentService.getDepartment(depId).then(dep => {
+                        dess.push({
+                            id: data.rows.item(i).id,
+                            name: data.rows.item(i).name,
+                            department: dep[0]
+                        });
+                    });
+                }
+            }
+            return dess;
         });
     }
 }

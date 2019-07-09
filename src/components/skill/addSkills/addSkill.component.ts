@@ -8,7 +8,7 @@ import { DepartmentService } from 'src/services/department.service';
 import { SkillService } from 'src/services/skill.service';
 
 import { IDepartment } from 'src/components/department/department.interface';
-import { NetConnectionService } from 'src/services/shared/connection.service';
+import { NetConnectionService, ConnectionStatus } from 'src/services/shared/connection.service';
 
 @Component({
     selector: 'add-skill',
@@ -26,15 +26,15 @@ export class AddSkillComponent {
         private skillForm: FormBuilderService,
         private alertService: AlertService,
         private location: Location,
-        private netConnection: NetConnectionService) {
-        this.netConnection.getConnectionState().subscribe(online => {
-            if (online) {
-                this.departmentService.departmentsFromAPI().subscribe(depFromAPI => {
-                    this.departments = depFromAPI;
-                });
-            } else {
+        private netConnectionService: NetConnectionService) {
+        this.netConnectionService.onNetworkChange().subscribe((status: ConnectionStatus) => {
+            if (status === ConnectionStatus.Offline) {
                 this.departmentService.departmentsFromDB().then(depFromDB => {
                     this.departments = depFromDB;
+                });
+            } else {
+                this.departmentService.departmentsFromServer().subscribe(depFromAPI => {
+                    this.departments = depFromAPI;
                 });
             }
         });
@@ -42,9 +42,13 @@ export class AddSkillComponent {
 
     addSkill() {
         if (this.newSkill.value.departmentId && this.newSkill.value.name) {
+            const skillId = require('uuid/v4');
+            this.newSkill.patchValue({
+                id: skillId()
+            });
             const confirm = this.alertService.confirmAdd('Skill', this.newSkill.value.name);
             if (confirm) {
-                const addSkill = this.skillService.addNewSkill(this.newSkill.value);
+                const addSkill = this.skillService.addSkillToDB(this.newSkill.value);
                 if (addSkill != null) {
                     addSkill.subscribe(
                         (data) => {

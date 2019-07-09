@@ -9,7 +9,7 @@ import { AlertService } from 'src/services/shared/alert.service';
 
 import { IDepartment } from 'src/components/department/department.interface';
 import { ISkills } from '../skill.interface';
-import { NetConnectionService } from 'src/services/shared/connection.service';
+import { NetConnectionService, ConnectionStatus } from 'src/services/shared/connection.service';
 import { DepartmentService } from 'src/services/department.service';
 
 @Component({
@@ -29,14 +29,12 @@ export class EditSkillComponent implements OnInit {
         private skillForm: FormBuilderService,
         private route: ActivatedRoute,
         private skillService: SkillService,
-        private netConnection: NetConnectionService,
+        private netConnectionService: NetConnectionService,
         private departmentService: DepartmentService,
         private alertService: AlertService,
         private location: Location) {
-        this.netConnection.getConnectionState().subscribe(online => {
-            if (online) {
-                this.offline = false;
-            } else {
+        this.netConnectionService.onNetworkChange().subscribe((status: ConnectionStatus) => {
+            if (status === ConnectionStatus.Offline) {
                 this.offline = true;
             }
         });
@@ -57,7 +55,7 @@ export class EditSkillComponent implements OnInit {
             });
         } else {
             let skillArray: ISkills[];
-            this.skillService.skillsFromAPI().subscribe(apiSkill => {
+            this.skillService.skillsFromServer().subscribe(apiSkill => {
                 skillArray = apiSkill;
             });
             this.skill = this.getSelectedSkill(skillArray, this.skillId);
@@ -74,7 +72,6 @@ export class EditSkillComponent implements OnInit {
     }
 
     initializeValues(skill: any) {
-        console.log(skill, 'skill from api');
         if (this.offline) {
             this.departmentService.getDepartment(skill.department).then(dep => {
                 this.department = dep[0].name;

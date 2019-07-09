@@ -1,49 +1,51 @@
 <ion-header>
-    <ion-toolbar>
-      <ion-title>
-        Department 
-      </ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-toolbar>
+    <ion-title>
+      Department
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
 
-  <div class='depAdd'>
-      <ion-fab horizontal="end" slot="fixed" [routerLink] = "['/home/addDepartment']"  routerLinkActive="active">
-        <ion-fab-button>
-          <ion-icon name="add"></ion-icon>
-        </ion-fab-button>
-      </ion-fab>
-    </div>
+<div class='depAdd'>
+  <ion-fab horizontal="end" slot="fixed" [routerLink]="['/home/addDepartment']" routerLinkActive="active">
+    <ion-fab-button>
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</div>
 
-  <ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
-  
-  <div class='desContainar'>
-    <table>
-      <thead>
-        <tr>
-          <th>
-            <ion-item>
-              <ion-label>Department</ion-label>
-            </ion-item>
-          </th> 
-          <th>
-            <ion-item>
-              <ion-label>Action</ion-label>
-            </ion-item>
-          </th> 
-        </tr>
-      </thead>
-  
-      <tbody>
-        <tr *ngFor='let department of departments'>
-          <td>
-            <ion-item>
-              <ion-label>{{department.name}}</ion-label>
-            </ion-item>
-          </td>
-          <td>
-            <ion-button color="warning" *ngIf="department.id" [routerLink] = "['/home/editDepartment',department.id]">Edit</ion-button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
+
+<div class='desContainar'>
+  <table>
+    <thead>
+      <tr>
+        <th>
+          <ion-item>
+            <ion-label>Department</ion-label>
+          </ion-item>
+        </th>
+        <th>
+          <ion-item>
+            <ion-label>Action</ion-label>
+          </ion-item>
+        </th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor='let department of departments'>
+        <td>
+          <ion-item>
+            <ion-label>{{department.name}}</ion-label>
+          </ion-item>
+        </td>
+        <td>
+          <ion-button color="warning" *ngIf="department.id" [routerLink]="['/home/editDepartment',department.id]">Edit
+          </ion-button>
+          <ion-button color="danger" (click)="deleteDepartment(department.id)">Delete</ion-button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
