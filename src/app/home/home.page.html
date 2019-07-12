@@ -1,41 +1,41 @@
 <ion-content>
-<div class="left-bar">
+  <div class="left-bar">
 
-  <ion-header>
-    <ion-toolbar>
-      <ion-title>
-        Employee Portal 
-      </ion-title>
-    </ion-toolbar>
-  </ion-header>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>
+          Employee Portal
+        </ion-title>
+      </ion-toolbar>
+    </ion-header>
 
-  <ion-list>
-      <ion-item [routerLink] = "['/home/employee']" routerLinkActive="active">
+    <ion-list>
+      <ion-item [routerLink]="['/home/employee']" routerLinkActive="active">
         <ion-label>
           Employee
         </ion-label>
       </ion-item>
-      <ion-item [routerLink] = "['/home/department']"  routerLinkActive="active">
+      <ion-item [routerLink]="['/home/department']" routerLinkActive="active">
         <ion-label>
           Department
         </ion-label>
-        </ion-item>
-      <ion-item [routerLink] = "['/home/designation']"  routerLinkActive="active">
-          <ion-label>
-            Designation
-          </ion-label>
       </ion-item>
-      <ion-item [routerLink] = "['/home/skill']"  routerLinkActive="active">
-          <ion-label>
-            Skills
-          </ion-label>
+      <ion-item [routerLink]="['/home/designation']" routerLinkActive="active">
+        <ion-label>
+          Designation
+        </ion-label>
       </ion-item>
-  </ion-list>
+      <ion-item [routerLink]="['/home/skill']" routerLinkActive="active">
+        <ion-label>
+          Skills
+        </ion-label>
+      </ion-item>
+    </ion-list>
 
-</div>
+  </div>
 
-<div class="content">
-  <router-outlet></router-outlet>
-</div>
+  <div class="content">
+    <router-outlet></router-outlet>
+  </div>
 
 </ion-content>

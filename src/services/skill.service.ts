@@ -64,17 +64,44 @@ export class SkillService {
         });
     }
 
+    searchSkills(searchText: string): Observable<any[]> {
+        return new Observable(observer => {
+            let skills: any[] = [];
+            if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
+                this.skillsFromServer().subscribe(data => {
+                    skills = data.filter(val => {
+                        return val.name.toLowerCase().indexOf(searchText.toLowerCase()) > -1;
+                    });
+                    observer.next(skills);
+                    observer.complete();
+                });
+            } else {
+                from(this.databaseService.database.executeSql(`SELECT id,name FROM skill
+                    WHERE name LIKE '%${searchText}%'`, []).then(data => {
+                    if (data.rows.length) {
+                        for (let i = 0; i < data.rows.length; i++) {
+                            skills.push({
+                                id: data.rows.item(i).id,
+                                name: data.rows.item(i).name
+                            });
+                        }
+                    }
+                    observer.next(skills);
+                    observer.complete();
+                }));
+            }
+        });
+    }
+
     getSkill(id: ISkills['skillId']): Promise<ISkills[]> {
         const skill: ISkills[] = [];
         return this.databaseService.database.executeSql('SELECT * FROM skill WHERE id = ?', [id]).then(data => {
             if (data.rows.length > 0) {
-                // this.departmentService.getDepartment(data.rows.item(0).department).then(dep => {
                 skill.push({
                     skillId: data.rows.item(0).id,
                     name: data.rows.item(0).name,
                     department: data.rows.item(0).department
                 });
-                // });
             }
             return skill;
         });
@@ -111,6 +138,9 @@ export class SkillService {
             });
             return this.dbSkillList;
         }));
+        if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
+            this.addSkillToServer(skill);
+        }
         return addNewSkill;
     }
 
@@ -226,7 +256,14 @@ export class SkillService {
             console.log('Skills missing From DB: ', addToDB);
             console.log('Skills missing From Server', addToServer);
             if (addToDB.length) {
-                addToDB.forEach(skill => {
+                const skillToAdd = addToDB.map((skill: any) => {
+                    return {
+                        id: skill.id,
+                        name: skill.name,
+                        departmentId: skill.department.id
+                    };
+                });
+                skillToAdd.forEach(skill => {
                     this.addSkillToDB(skill).subscribe(() => { });
                 });
             }

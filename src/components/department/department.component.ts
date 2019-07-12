@@ -14,6 +14,8 @@ import { AlertService } from 'src/services/shared/alert.service';
 export class DepartmentComponent implements OnDestroy {
   private departments: IDepartment[];
   private network$: any;
+  private searchText: string;
+  private searchResults: any[] = [];
 
   constructor(
     private departmentService: DepartmentService,
@@ -31,6 +33,25 @@ export class DepartmentComponent implements OnDestroy {
           this.departments = depFromServer;
         });
         this.departmentService.mergeServerDB();
+      }
+    });
+
+    this.searchText = '';
+    this.searchResults = [];
+  }
+
+  updateSearchResults(ev: any) {
+    this.searchText = ev.target.value;
+    if (this.searchText === '') {
+      this.searchResults = [];
+      return;
+    }
+    this.departmentService.searchDepartment(this.searchText).subscribe(results => {
+      this.searchResults = [];
+      if (results.length) {
+        results.forEach(res => {
+          this.searchResults.push(res);
+        });
       }
     });
   }

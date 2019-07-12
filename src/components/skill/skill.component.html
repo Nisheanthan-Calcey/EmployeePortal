@@ -1,35 +1,44 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      Skills 
+      Skills
+      <ion-icon name="home" id="home" [routerLink]="['/home']"></ion-icon>
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <div class='skillAdd'>
-  <ion-fab horizontal="end" slot="fixed" [routerLink] = "['/home/addSkill']">
+  <ion-fab horizontal="end" slot="fixed" [routerLink]="['/home/addSkill']">
     <ion-fab-button>
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 </div>
-  
-<ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
+
+<ion-searchbar placeholder="Search Here" [(ngModel)]="searchText" (ionInput)="updateSearchResults($event)"
+  showCancelButton>
+</ion-searchbar>
+
+<ion-list [hidden]="searchResults.length === 0">
+  <ion-item *ngFor="let item of searchResults" tappable>
+    {{item.name}}
+  </ion-item>
+</ion-list>
 
 <div class='skillContainar'>
   <table>
     <thead>
       <tr>
-          <th>
-            <ion-item>
-              <ion-label>Skill</ion-label>
-            </ion-item>
-          </th>
-          <th>
-            <ion-item>
-              <ion-label>Department</ion-label>
-            </ion-item>
-          </th> 
+        <th>
+          <ion-item>
+            <ion-label>Skill</ion-label>
+          </ion-item>
+        </th>
+        <th>
+          <ion-item>
+            <ion-label>Department</ion-label>
+          </ion-item>
+        </th>
       </tr>
     </thead>
 
@@ -41,13 +50,17 @@
           </ion-item>
         </td>
         <td>
-          <ion-item *ngIf = 'skill.department'>
+          <ion-item *ngIf='skill.department'>
             <ion-label>{{skill.department.name}}</ion-label>
           </ion-item>
         </td>
         <td>
-          <ion-button color="warning" [routerLink] = "['/home/editSkill',skill.id]">Edit</ion-button>
-          <ion-button color="danger" (click)="deleteSkill(skill.id)">Delete</ion-button>
+          <ion-button [routerLink]="['/home/editSkill',skill.id]">
+            <ion-icon name="create"></ion-icon>
+          </ion-button>
+          <ion-button (click)="deleteSkill(skill.id)">
+            <ion-icon name="trash"></ion-icon>
+          </ion-button>
         </td>
       </tr>
     </tbody>

@@ -114,12 +114,14 @@ export class AddEmployeeComponent {
     }
 
     addEmployee() {
+        const id = require('uuid/v4');
         this.newEmployee.patchValue({
             fullName: this.newEmployee.value.displayName,
+            id: id()
         });
         const confirm = this.alertService.confirmAdd('Employee', this.newEmployee.value.displayName);
         if (confirm) {
-            const addEmp = this.employeeService.addNewEmployee(this.newEmployee.value);
+            const addEmp = this.employeeService.addEmpToDB(this.newEmployee.value);
             if (addEmp != null) {
                 addEmp.subscribe(
                     (data) => {

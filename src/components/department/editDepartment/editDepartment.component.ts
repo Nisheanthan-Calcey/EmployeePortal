@@ -49,12 +49,10 @@ export class EditDepartmentComponent implements OnInit {
                 this.initializeValues(this.department);
             });
         } else {
-            let depArray;
-            this.departmentService.departmentsFromServer().subscribe(depFromAPI => {
-                depArray = depFromAPI;
+            this.departmentService.departmentsFromServer().subscribe(async depFromAPI => {
+                this.department = await this.getSelectedDepartment(depFromAPI, this.depId);
+                this.initializeValues(this.department);
             });
-            this.department = this.getSelectedDepartment(depArray, this.depId);
-            this.initializeValues(this.department);
         }
     }
 

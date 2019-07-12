@@ -2,6 +2,7 @@
   <ion-toolbar>
     <ion-title>
       Department
+      <ion-icon name="home" id="home" [routerLink]="['/home']"></ion-icon>
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -14,7 +15,15 @@
   </ion-fab>
 </div>
 
-<ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
+<ion-searchbar placeholder="Search Here" [(ngModel)]="searchText" (ionInput)="updateSearchResults($event)"
+  showCancelButton>
+</ion-searchbar>
+
+<ion-list [hidden]="searchResults.length === 0">
+  <ion-item *ngFor="let item of searchResults" tappable>
+    {{item.displayName}}
+  </ion-item>
+</ion-list>
 
 <div class='desContainar'>
   <table>
@@ -41,9 +50,12 @@
           </ion-item>
         </td>
         <td>
-          <ion-button color="warning" *ngIf="department.id" [routerLink]="['/home/editDepartment',department.id]">Edit
+          <ion-button *ngIf="department.id" [routerLink]="['/home/editDepartment',department.id]">
+            <ion-icon name="create"></ion-icon>
           </ion-button>
-          <ion-button color="danger" (click)="deleteDepartment(department.id)">Delete</ion-button>
+          <ion-button (click)="deleteDepartment(department.id)">
+            <ion-icon name="trash"></ion-icon>
+          </ion-button>
         </td>
       </tr>
     </tbody>

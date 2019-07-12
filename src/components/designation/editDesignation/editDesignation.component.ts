@@ -53,14 +53,11 @@ export class EditDesignationComponent implements OnInit {
                 this.initializeValues(this.designation);
             });
         } else {
-            let desArray;
-            this.designationService.designationsFromServer().subscribe(desFromAPI => {
-                desArray = desFromAPI;
+            this.designationService.designationsFromServer().subscribe(async desFromAPI => {
+                this.designation = await this.getSelectedDesignation(desFromAPI, this.desId);
+                this.initializeValues(this.designation);
             });
-            this.designation = this.getSelectedDesignation(desArray, this.desId);
-            this.initializeValues(this.designation);
         }
-
     }
 
     getSelectedDesignation(designations: any, id: IDesignation['id']) {

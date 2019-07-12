@@ -54,12 +54,10 @@ export class EditSkillComponent implements OnInit {
                 this.initializeValues(this.skill);
             });
         } else {
-            let skillArray: ISkills[];
-            this.skillService.skillsFromServer().subscribe(apiSkill => {
-                skillArray = apiSkill;
+            this.skillService.skillsFromServer().subscribe(async apiSkill => {
+                this.skill = await this.getSelectedSkill(apiSkill, this.skillId);
+                this.initializeValues(this.skill);
             });
-            this.skill = this.getSelectedSkill(skillArray, this.skillId);
-            this.initializeValues(this.skill);
         }
     }
 

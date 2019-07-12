@@ -14,6 +14,8 @@ import { ISkills } from './skill.interface';
 export class SkillComponent implements OnDestroy {
   public skills: ISkills[];
   private network$: any;
+  private searchText: string;
+  private searchResults: any[] = [];
 
   constructor(
     private skillService: SkillService,
@@ -30,6 +32,25 @@ export class SkillComponent implements OnDestroy {
         console.log('Skills Page: OFFLINE');
         this.skillService.skillsFromDB().then(skillFromDB => {
           this.skills = skillFromDB;
+        });
+      }
+    });
+
+    this.searchText = '';
+    this.searchResults = [];
+  }
+
+  updateSearchResults(ev: any) {
+    this.searchText = ev.target.value;
+    if (this.searchText === '') {
+      this.searchResults = [];
+      return;
+    }
+    this.skillService.searchSkills(this.searchText).subscribe(results => {
+      this.searchResults = [];
+      if (results.length) {
+        results.forEach(res => {
+          this.searchResults.push(res);
         });
       }
     });

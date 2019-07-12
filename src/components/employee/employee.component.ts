@@ -14,7 +14,9 @@ import { NetConnectionService, ConnectionStatus } from 'src/services/shared/conn
 })
 export class EmployeeComponent implements OnDestroy {
   public employees: IEmployee[];
-  private network$;
+  private network$: any;
+  private searchText: string;
+  private searchResults = [];
 
   constructor(
     private employeeService: EmployeeService,
@@ -29,8 +31,27 @@ export class EmployeeComponent implements OnDestroy {
         });
       } else {
         console.log('Employee Page: ONLINE');
-        this.employeeService.employeesFromAPI().subscribe(empFromAPI => {
+        this.employeeService.employeesFromServer().subscribe(empFromAPI => {
           this.employees = empFromAPI;
+        });
+      }
+    });
+
+    this.searchText = '';
+    this.searchResults = [];
+  }
+
+  updateSearchResults(ev: any) {
+    this.searchText = ev.target.value;
+    if (this.searchText === '') {
+      this.searchResults = [];
+      return;
+    }
+    this.employeeService.searchEmployee(this.searchText).subscribe(results => {
+      this.searchResults = [];
+      if (results.length) {
+        results.forEach(res => {
+          this.searchResults.push(res);
         });
       }
     });

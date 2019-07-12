@@ -1,55 +1,68 @@
 <ion-header>
-    <ion-toolbar>
-      <ion-title>
-        Designation 
-      </ion-title>
-    </ion-toolbar>
-  </ion-header>
+  <ion-toolbar>
+    <ion-title>
+      Designation
+      <ion-icon name="home" id="home" [routerLink]="['/home']"></ion-icon>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
 
-  <div class='desAdd'>
-    <ion-fab horizontal="end" slot="fixed" [routerLink] = "['/home/addDesignation']"  routerLinkActive="active">
-      <ion-fab-button>
-        <ion-icon name="add"></ion-icon>
-      </ion-fab-button>
-    </ion-fab>
-  </div>
+<div class='desAdd'>
+  <ion-fab horizontal="end" slot="fixed" [routerLink]="['/home/addDesignation']" routerLinkActive="active">
+    <ion-fab-button>
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</div>
 
-  <ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
-  
-  <div class='desContainar'>
-    <table>
-      <thead>
-        <tr>
-            <th>
-              <ion-item>
-                <ion-label>Designation</ion-label>
-              </ion-item>
-            </th>
-            <!-- <th>
+<ion-searchbar placeholder="Search Here" [(ngModel)]="searchText" (ionInput)="updateSearchResults($event)"
+  showCancelButton>
+</ion-searchbar>
+
+<ion-list [hidden]="searchResults.length === 0">
+  <ion-item *ngFor="let item of searchResults" tappable>
+    {{item.name}}
+  </ion-item>
+</ion-list>
+
+<div class='desContainar'>
+  <table>
+    <thead>
+      <tr>
+        <th>
+          <ion-item>
+            <ion-label>Designation</ion-label>
+          </ion-item>
+        </th>
+        <!-- <th>
               <ion-item>
                 <ion-label>Department</ion-label>
               </ion-item>
             </th>  -->
-        </tr>
-      </thead>
-  
-      <tbody>
-        <tr *ngFor='let designation of designations'>
-          <td>
-            <ion-item>
-              <ion-label>{{designation.name}}</ion-label>
-            </ion-item>
-          </td>
-          <!-- <td>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor='let designation of designations'>
+        <td>
+          <ion-item>
+            <ion-label>{{designation.name}}</ion-label>
+          </ion-item>
+        </td>
+        <!-- <td>
             <ion-item *ngIf='designation.department'>
               <ion-label>{{designation.department.name}}</ion-label>
             </ion-item>
           </td> -->
-          <td>
-            <ion-button color="warning" [routerLink] = "['/home/editDesignation',designation.id]"  routerLinkActive="active">Edit</ion-button>
-            <ion-button color="danger" (click)="deleteDesignation(designation.id)">Delete</ion-button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+        <td>
+          <ion-button [routerLink]="['/home/editDesignation',designation.id]" routerLinkActive="active">
+            <ion-icon name="create"></ion-icon>
+          </ion-button>
+          <ion-button (click)="deleteDesignation(designation.id)">
+            <ion-icon name="trash"></ion-icon>
+          </ion-button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

@@ -1,20 +1,29 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      Employee 
+      Employee
+      <ion-icon name="home" id="home" [routerLink]="['/home']"></ion-icon>
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <div class='empAdd'>
-  <ion-fab horizontal="end" slot="fixed" [routerLink] = "['/home/addEmployee']">
+  <ion-fab horizontal="end" slot="fixed" [routerLink]="['/home/addEmployee']">
     <ion-fab-button>
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
 </div>
 
-<ion-searchbar placeholder="Search Here" showCancelButton></ion-searchbar>
+<ion-searchbar placeholder="Search Here" [(ngModel)]="searchText" (ionInput)="updateSearchResults($event)"
+  showCancelButton>
+</ion-searchbar>
+
+<ion-list [hidden]="searchResults.length === 0">
+  <ion-item *ngFor="let item of searchResults" (click)="selectEmployee(item.id)" tappable>
+    {{item.fullName}}
+  </ion-item>
+</ion-list>
 
 <div class='empContainar'>
   <table>
@@ -29,17 +38,17 @@
           <ion-item>
             <ion-label>Department</ion-label>
           </ion-item>
-        </th> 
+        </th>
         <th>
           <ion-item>
             <ion-label>Designation</ion-label>
           </ion-item>
-        </th> 
+        </th>
         <th>
           <ion-item>
             <ion-label>Project</ion-label>
           </ion-item>
-        </th> 
+        </th>
         <th>
           <ion-item>
             <ion-label>Action</ion-label>
@@ -51,7 +60,7 @@
     <tbody>
       <tr *ngFor='let employee of employees'>
         <td>
-          <ion-item button (click)='selectEmployee(employee.id)' >
+          <ion-item button (click)='selectEmployee(employee.id)'>
             <ion-label>{{employee.fullName}}</ion-label>
           </ion-item>
         </td>
@@ -66,16 +75,19 @@
           </ion-item>
         </td>
         <td>
-          <ion-item *ngFor = 'let project of employee.projects'>
+          <ion-item *ngFor='let project of employee.projects'>
             <ion-label>{{project.name}}</ion-label>
           </ion-item>
         </td>
         <td>
-          <ion-button color="warning" [routerLink] = "['/home/editEmployee',employee.id]" >Edit</ion-button>
-          <ion-button color="danger" (click)="deleteEmployee(employee.id)">Delete</ion-button>
+          <ion-button [routerLink]="['/home/editEmployee',employee.id]">
+            <ion-icon name="create"></ion-icon>
+          </ion-button>
+          <ion-button (click)="deleteEmployee(employee.id)">
+            <ion-icon name="trash"></ion-icon>
+          </ion-button>
         </td>
       </tr>
     </tbody>
   </table>
 </div>
-

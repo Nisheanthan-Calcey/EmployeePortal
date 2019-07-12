@@ -3,11 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { SQLitePorter } from '@ionic-native/sqlite-porter/ngx';
 import { Observable, from, forkJoin } from 'rxjs';
 
+import { DatabaseService } from './shared/database.service';
 import { NetConnectionService, ConnectionStatus } from './shared/connection.service';
 import { ApiHeaderService } from './shared/apiHeader.service';
 
 import { IDepartment } from 'src/components/department/department.interface';
-import { DatabaseService } from './shared/database.service';
 
 @Injectable()
 export class DepartmentService {
@@ -48,7 +48,7 @@ export class DepartmentService {
                 // });
             },
                 error => {
-                    alert('Error on API, Trying to fetch Departments from Database');
+                    alert('Error on API');
                     observer.error(error);
                 }
             );
@@ -72,6 +72,42 @@ export class DepartmentService {
         });
     }
 
+    searchDepartment(searchText: string): Observable<any[]> {
+        return new Observable(observer => {
+            let deps: any[] = [];
+            if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
+                console.log(this.serverDepartmentList, 'server department list');
+                if (searchText.trim() !== '') {
+                    this.departmentsFromServer().subscribe(data => {
+                        deps = data.filter(val => {
+                            return val.displayName.toLowerCase().indexOf(searchText.toLowerCase()) > -1;
+                        });
+                        observer.next(deps);
+                        observer.complete();
+                    });
+                } else {
+                    observer.next(deps);
+                    observer.complete();
+                }
+            } else {
+                from(this.databaseService.database.executeSql(`SELECT * FROM department
+                    WHERE displayName LIKE '%${searchText}%'`, []).then(data => {
+                    if (data.rows.length) {
+                        for (let i = 0; i < data.rows.length; i++) {
+                            deps.push({
+                                id: data.rows.item(i).id,
+                                displayName: data.rows.item(i).displayName,
+                                name: data.rows.item(i).name
+                            });
+                        }
+                    }
+                    observer.next(deps);
+                    observer.complete();
+                }));
+            }
+        });
+    }
+
     getDepartment(id: any): Promise<IDepartment[]> {
         const department: IDepartment[] = [];
         return this.databaseService.database.executeSql('SELECT * FROM department WHERE id = ?', [id]).then(data => {
@@ -87,7 +123,6 @@ export class DepartmentService {
     }
 
     addDepToServer(department) {
-        console.log(department, 'adding dep to server');
         this.http.post<IDepartment[]>(`${this.ROOT_URL}`, department, { headers: this.headers }).
             subscribe(d => {
                 const newId = Object.values(d)[0];
@@ -98,7 +133,7 @@ export class DepartmentService {
                             this.dbDepartmentList = dept;
                         });
                     } else {
-                        console.log('error on editting in db');
+                        console.log('Error on Changing ID in DB');
                     }
                 });
                 this.departmentsFromServer().subscribe(dep => {
@@ -117,8 +152,10 @@ export class DepartmentService {
                 this.dbDepartmentList = depAfterAdd;
             });
             return this.dbDepartmentList;
-        })
-        );
+        }));
+        if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
+            this.addDepToServer(department);
+        }
         return addNewDep;
     }
 

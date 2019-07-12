@@ -76,6 +76,35 @@ export class DesignationService {
         });
     }
 
+    searchDesignations(searchText): Observable<any[]> {
+        return new Observable(observer => {
+            let des: any[] = [];
+            if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
+                this.designationsFromServer().subscribe(data => {
+                    des = data.filter(val => {
+                        return val.name.toLowerCase().indexOf(searchText.toLowerCase()) > -1;
+                    });
+                    observer.next(des);
+                    observer.complete();
+                });
+            } else {
+                from(this.databaseService.database.executeSql(`SELECT id,name FROM designation
+                    WHERE name LIKE '%${searchText}%'`, []).then(data => {
+                    if (data.rows.length) {
+                        for (let i = 0; i < data.rows.length; i++) {
+                            des.push({
+                                id: data.rows.item(i).id,
+                                name: data.rows.item(i).name
+                            });
+                        }
+                    }
+                    observer.next(des);
+                    observer.complete();
+                }));
+            }
+        });
+    }
+
     getDesignation(id: any): Promise<IDesignation[]> {
         const designation: IDesignation[] = [];
         return this.databaseService.database.executeSql('SELECT * FROM designation WHERE id =?', [id]).then(data => {
@@ -101,7 +130,7 @@ export class DesignationService {
                             this.dbDesignationList = desig;
                         });
                     } else {
-                        console.log('error on editing in db');
+                        console.log('Error on Changing ID in DB');
                     }
                 });
                 this.designationsFromServer().subscribe(des => {
@@ -123,6 +152,9 @@ export class DesignationService {
             }
             return this.dbDesignationList;
         }));
+        if (this.connectionService.getCurrentNetworkStatus() === ConnectionStatus.Online) {
+            this.addDesToServer(designation);
+        }
         return addNewDes;
     }
 
@@ -183,7 +215,7 @@ export class DesignationService {
                     observer.complete();
                 },
                     error => {
-                        console.log(error);
+                        console.log('Error at Desig from Dep', error);
                     });
             } else {
                 this.databaseService.database.executeSql('SELECT * FROM designation WHERE department = ?', [id]).then(des => {
@@ -242,7 +274,14 @@ export class DesignationService {
             console.log('Designations missing From DB: ', addToDB);
             console.log('Designations missing From Server', addToServer);
             if (addToDB.length) {
-                addToDB.forEach(des => {
+                const desToAdd = addToDB.map((des: any) => {
+                    return {
+                        id: des.id,
+                        name: des.name,
+                        departmentId: des.department.id
+                    };
+                });
+                desToAdd.forEach(des => {
                     this.addDesToDB(des).subscribe(() => { });
                 });
             }

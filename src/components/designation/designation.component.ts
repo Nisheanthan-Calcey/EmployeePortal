@@ -15,8 +15,9 @@ import { Observable } from 'rxjs';
 })
 export class DesignationComponent implements OnDestroy {
   private designations: IDesignation[];
-  private online: boolean;
   private network$: any;
+  private searchText: string;
+  private searchResults: any[] = [];
 
   constructor(
     private designationService: DesignationService,
@@ -33,6 +34,25 @@ export class DesignationComponent implements OnDestroy {
         this.designationService.mergeServerDB();
         this.designationService.designationsFromServer().subscribe(apiDes => {
           this.designations = apiDes;
+        });
+      }
+    });
+
+    this.searchText = '';
+    this.searchResults = [];
+  }
+
+  updateSearchResults(ev: any) {
+    this.searchText = ev.target.value;
+    if (this.searchText === '') {
+      this.searchResults = [];
+      return;
+    }
+    this.designationService.searchDesignations(this.searchText).subscribe(results => {
+      this.searchResults = [];
+      if (results.length) {
+        results.forEach(res => {
+          this.searchResults.push(res);
         });
       }
     });
