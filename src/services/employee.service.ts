@@ -267,7 +267,7 @@ export class EmployeeService {
         } else {
             this.databaseService.database.executeSql('CREATE TABLE IF NOT EXISTS editEmpTable (id PRIMARY KEY)', []).then(_ => {
                 this.databaseService.database.executeSql(`
-                    INSERT INTO editEmpSkill (id) SELECT ${id}
+                    INSERT INTO editEmpTable (id) SELECT ${id}
                         WHERE NOT EXISTS (SELECT * FROM editEmpTable WHERE id = ${id})
                     `, []).then(data => { });
             });
@@ -292,6 +292,7 @@ export class EmployeeService {
     }
 
     updateLocalDb(empArray: IEmployee[]) {
+        console.log('update local db into');
         const emp = [];
         for (const em of empArray) {
             const emplo = this.selectedEmployee(em.id);
@@ -442,6 +443,7 @@ export class EmployeeService {
             console.log('Editted Employees when Offline: ', emps);
             if (emps.length) {
                 emps.forEach(emp => {
+                    console.log(emp, 'emp');
                     this.http.put<void>(`${this.ROOT_URL}/${emp.id}`, emp, { headers: this.headers }).
                         subscribe(() => {
                             const id = JSON.stringify(emp.id);
@@ -463,33 +465,32 @@ export class EmployeeService {
             console.log('Dummy Employee Edit Table Created');
         });
         return this.databaseService.database.executeSql(`SELECT * FROM employee
-            WHERE EXISTS (SELECT id FROM editEmpTable WHERE employee.id = editEmpTable)`, []).then(async data => {
+            WHERE EXISTS (SELECT id FROM editEmpTable WHERE employee.id = editEmpTable.id)`, []).then(async data => {
             if (data.rows.length) {
                 for (let i = 0; i < data.rows.length; i++) {
-                    const depId = data.rows.item(i).department;
-                    const desId = data.rows.item(i).designation;
-                    await this.departmentService.getDepartment(depId).then(async (dep) => {
-                        await this.designationService.getDesignation(desId).then(async (des) => {
-                            await employees.push({
-                                id: data.rows.item(i).id,
-                                firstName: data.rows.item(i).firstName,
-                                lastName: data.rows.item(i).lastName,
-                                fullName: data.rows.item(i).fullName,
-                                displayName: data.rows.item(i).displayName,
-                                startDate: data.rows.item(i).startDate,
-                                resignationDate: data.rows.item(i).resignationDate,
-                                resignationReason: data.rows.item(i).resignationReason,
-                                email: data.rows.item(i).email,
-                                employeeContactInfo: data.rows.item(i).employeeContactInfo,
-                                department: dep[0],
-                                designation: des[0],
-                                skills: data.rows.item(i).skills,
-                                currentProjects: data.rows.item(i).currentProjects
-                            });
+                    console.log(data.rows.item(i), 'edit emp');
+                    const contactId = data.rows.item(i).employeeContactInfo;
+                    this.getEmpContact(contactId).then(async contact => {
+                        await employees.push({
+                            id: data.rows.item(i).id,
+                            firstName: data.rows.item(i).firstName,
+                            lastName: data.rows.item(i).lastName,
+                            fullName: data.rows.item(i).fullName,
+                            displayName: data.rows.item(i).displayName,
+                            startDate: data.rows.item(i).startDate,
+                            resignationDate: data.rows.item(i).resignationDate,
+                            resignationReason: data.rows.item(i).resignationReason,
+                            email: data.rows.item(i).email,
+                            contactInfo: contact[0],
+                            departmentId: data.rows.item(i).department,
+                            designationId: data.rows.item(i).designation,
+                            skills: data.rows.item(i).skills,
+                            projects: data.rows.item(i).currentProjects
                         });
                     });
                 }
             }
+            console.log(employees, 'check');
             return employees;
         });
     }

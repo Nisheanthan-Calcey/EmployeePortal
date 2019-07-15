@@ -147,7 +147,7 @@ export class EditEmployeeComponent implements OnInit {
                     city: selectedEmployee.employeeContactInfo.address.city,
                 }
             },
-            department: selectedEmployee.department.id,
+            // department: selectedEmployee.department.id,
             designation: selectedEmployee.designation.id,
         });
 

@@ -31,6 +31,7 @@ export class EmployeeComponent implements OnDestroy {
         });
       } else {
         console.log('Employee Page: ONLINE');
+        this.employeeService.mergeServerDB();
         this.employeeService.employeesFromServer().subscribe(empFromAPI => {
           this.employees = empFromAPI;
         });
